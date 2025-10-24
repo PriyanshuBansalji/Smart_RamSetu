@@ -1,0 +1,1 @@
+app.use("/api/feedback", require("./routes/feedback"));

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ram Setu Logo">
+  <defs>
+    <linearGradient id="gradRed" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF6B6B"/>
+      <stop offset="100%" stop-color="#C81E1E"/>
+    </linearGradient>
+    <linearGradient id="gradGreen" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A7F3D0"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <!-- Left (red) arc -->
+  <path d="M128 168c-34-24-58-56-58-88 0-26 16-44 40-44 17 0 30 10 38 28-10-12-22-18-34-18-18 0-30 13-30 30 0 34 23 62 44 84z" fill="url(#gradRed)"/>
+  <!-- Right (green) arc -->
+  <path d="M128 168c34-24 58-56 58-88 0-26-16-44-40-44-17 0-30 10-38 28 10-12 22-18 34-18 18 0 30 13 30 30 0 34-23 62-44 84z" fill="url(#gradGreen)"/>
+</svg>
