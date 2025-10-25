@@ -25,7 +25,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ["http://localhost:8080", "http://localhost:5173"],
+  origin: [
+    "http://localhost:8080", 
+    "http://localhost:5173",
+    "https://ramsetu-health-bridge-83g2d2ca.vercel.app",
+    "https://ramsetu-admin-3dt6uxggc-priyanshujibansal-1166s-projects.vercel.app"
+  ],
   credentials: true
 }));
 app.use(express.json());
