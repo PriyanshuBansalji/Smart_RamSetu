@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
   Card,
@@ -130,6 +130,41 @@ const DonorDashboard = () => {
   const [docsError, setDocsError] = useState<string | null>(null);
   const [docStatusFilter, setDocStatusFilter] = useState<'all' | 'approved' | 'donated' | 'pending' | 'rejected'>('approved');
   const [docOrganFilter, setDocOrganFilter] = useState<string>("");
+
+  // Derive image files from documents to show in Profile (photos user has input/uploaded)
+  const imageFiles = useMemo(() => {
+    const out: { url: string; name?: string }[] = [];
+    const isImageByExt = (u?: string) => !!u && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test((u.split('?')[0] || ''));
+    const toAbs = (u: string) => {
+      const trimmed = (u || '').trim();
+      if (!trimmed) return '';
+      if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed; // absolute or data URL
+      return `${SERVER_BASE}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+    };
+    docs.forEach((doc: any) => {
+      const files = Array.isArray(doc?.files) && doc.files.length
+        ? doc.files
+        : (doc?.fileUrl ? [{ fileUrl: doc.fileUrl, originalName: doc.originalName, mimeType: (doc as any).mimeType }] : []);
+      files.forEach((f: any) => {
+        const url = String(f?.fileUrl || '');
+        const mime = String(f?.mimeType || '');
+        if (isImageByExt(url) || mime.startsWith('image/')) {
+          out.push({ url: toAbs(url), name: f?.originalName });
+        }
+      });
+      // include images referenced in tests
+      const tests = Array.isArray(doc?.tests) ? doc.tests : [];
+      tests.forEach((t: any, i: number) => {
+        const url = String(t?.fileUrl || '');
+        if (isImageByExt(url)) out.push({ url: toAbs(url), name: t?.label || `Test ${i+1}` });
+      });
+    });
+    return out;
+  }, [docs]);
+
+  // Prefer photos from uploaded documents; then explicit donor profile image; finally fallback to logo
+  const profilePhotoUrl = imageFiles[0]?.url || (profile?.profileImage?.data ? `${SERVER_BASE}/api/donor/profile-image/${profile?.id || profile?._id || profile?.userId}` : "/logo.png");
+  const [photoLightbox, setPhotoLightbox] = useState<string | null>(null);
 
   // Add state for organ form
   const [organ, setOrgan] = useState("");
@@ -410,7 +445,7 @@ const DonorDashboard = () => {
           <div className="rounded-3xl shadow-2xl border border-blue-200 bg-white/40 backdrop-blur-2xl flex flex-col md:flex-row items-center gap-8 p-10 transition-all duration-300 hover:shadow-blue-200/80 glassmorphism">
             <div className="relative">
               <img
-                src={profile?.profileImage?.data ? `/api/donor/profile-image/${profile.id || profile._id}` : "/logo.png"}
+                src={profilePhotoUrl}
                 alt="Profile"
                 className="h-40 w-40 rounded-full object-cover border-4 border-blue-400 shadow-xl bg-white ring-4 ring-blue-200"
                 style={{
@@ -598,6 +633,26 @@ const DonorDashboard = () => {
                           </div>
                         ))}
                     </div>
+                    {/* Quick photo thumbnails if any */}
+                    {imageFiles.length > 0 && (
+                      <div className="mt-6">
+                        <div className="mb-2 text-sm font-semibold text-blue-700">Your photos</div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {imageFiles.slice(0,8).map((f, i) => (
+                            <button
+                              type="button"
+                              key={f.url + i}
+                              className="group relative aspect-square rounded-lg overflow-hidden border bg-white/70 hover:shadow"
+                              onClick={() => setPhotoLightbox(f.url)}
+                              title={f.name || `Photo ${i+1}`}
+                            >
+                              <img src={f.url} alt={f.name || `Photo ${i+1}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                              <span className="absolute inset-x-0 bottom-0 text-[10px] text-white/95 bg-black/40 px-1 py-0.5 truncate">{f.name || `Photo ${i+1}`}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -861,6 +916,12 @@ const DonorDashboard = () => {
           )}
         </div>
       </div>
+      {/* Photo Lightbox */}
+      {photoLightbox && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPhotoLightbox(null)} role="dialog" aria-modal="true">
+          <img src={photoLightbox} alt="Expanded photo" className="max-h-[85vh] w-auto max-w-[95vw] rounded-lg shadow-2xl border border-white/10" onClick={(e)=>e.stopPropagation()} />
+        </div>
+      )}
     </AppLayout>
   );
 };

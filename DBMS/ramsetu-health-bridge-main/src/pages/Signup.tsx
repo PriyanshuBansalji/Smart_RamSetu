@@ -5,7 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, ArrowLeft } from "lucide-react";
+import { Heart, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +26,7 @@ const Signup = () => {
   const [formData, setFormData] = useState<any>({});
   const [passwordValue, setPasswordValue] = useState("");
   const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -149,16 +150,28 @@ const Signup = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      required
-                      disabled={loading}
-                      value={passwordValue}
-                      onChange={e => setPasswordValue(e.target.value)}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        required
+                        disabled={loading}
+                        value={passwordValue}
+                        onChange={e => setPasswordValue(e.target.value)}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((s) => !s)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <Button type="submit" className="w-full mt-6" disabled={loading}>
@@ -171,17 +184,18 @@ const Signup = () => {
                 <div className="mb-4 text-center text-base text-gray-700">
                   Enter the 6-digit OTP sent to <span className="font-semibold">{emailForOtp}</span>
                 </div>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value)}
-                  maxLength={6}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  className="border rounded px-2 py-2 w-full text-center text-lg tracking-widest"
-                  placeholder="Enter OTP"
-                  autoFocus
-                />
+                <div className="flex justify-center">
+                  <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
                   {loading ? "Verifying..." : "Verify OTP & Complete Signup"}
                 </Button>

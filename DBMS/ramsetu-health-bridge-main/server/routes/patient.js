@@ -56,6 +56,29 @@ router.get("/profile", authenticate, async (req, res) => {
   res.json(patient);
 });
 
+// Serve patient profile image by patient id or userId
+router.get("/profile-image/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    let patient = null;
+    // Try by Patient document id first
+    try {
+      patient = await Patient.findById(id);
+    } catch {}
+    // Fallback: try by userId
+    if (!patient) {
+      patient = await Patient.findOne({ userId: id });
+    }
+    if (!patient || !patient.profileImage || !patient.profileImage.data) {
+      return res.status(404).send("No profile image found");
+    }
+    res.set("Content-Type", patient.profileImage.contentType || "image/png");
+    res.send(patient.profileImage.data);
+  } catch (err) {
+    res.status(500).send("Error retrieving image");
+  }
+});
+
 // Get all patients (for admin panel)
 router.get("/all", async (req, res) => {
   try {

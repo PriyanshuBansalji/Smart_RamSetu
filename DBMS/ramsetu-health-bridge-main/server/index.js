@@ -24,13 +24,20 @@ console.log("EMAIL_USER:", process.env.EMAIL_USER, "EMAIL_PASS:", process.env.EM
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Flexible CORS configuration using environment variables
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+  : [
+      "http://localhost:8080", 
+      "http://localhost:5173",
+      "https://ramsetu-health-bridge-83g2d2ca.vercel.app",
+      "https://ramsetu-admin-3dt6uxggc-priyanshujibansal-1166s-projects.vercel.app"
+    ];
+
+console.log("Allowed CORS Origins:", allowedOrigins);
+
 app.use(cors({
-  origin: [
-    "http://localhost:8080", 
-    "http://localhost:5173",
-    "https://ramsetu-health-bridge-83g2d2ca.vercel.app",
-    "https://ramsetu-admin-3dt6uxggc-priyanshujibansal-1166s-projects.vercel.app"
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());

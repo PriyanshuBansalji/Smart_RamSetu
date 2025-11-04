@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import {
   Card,
@@ -133,6 +133,40 @@ const PatientDashboard = () => {
   useEffect(() => { fetchProfile(); }, []);
   useEffect(() => { fetchMatches(); fetchDocuments(); }, [profile]);
 
+  // Derive image files from documents to show in Profile (photos user has input/uploaded)
+  const imageFiles = useMemo(() => {
+    const out: { url: string; name?: string }[] = [];
+    const isImageByExt = (u?: string) => !!u && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(u.split('?')[0] || '');
+    const toAbs = (u: string) => {
+      const trimmed = (u || '').trim();
+      if (!trimmed) return '';
+      if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed; // absolute or data URL
+      return `${SERVER_BASE}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+    };
+    docs.forEach((doc: any) => {
+      const files = Array.isArray(doc?.files) && doc.files.length
+        ? doc.files
+        : (doc?.fileUrl ? [{ fileUrl: doc.fileUrl, originalName: doc.originalName, mimeType: doc.mimeType }] : []);
+      files.forEach((f: any) => {
+        const url = String(f?.fileUrl || '');
+        const mime = String(f?.mimeType || '');
+        if (isImageByExt(url) || mime.startsWith('image/')) {
+          out.push({ url: toAbs(url), name: f?.originalName });
+        }
+      });
+      // include images referenced in tests
+      const tests = Array.isArray(doc?.tests) ? doc.tests : [];
+      tests.forEach((t: any, i: number) => {
+        const url = String(t?.fileUrl || '');
+        if (isImageByExt(url)) out.push({ url: toAbs(url), name: t?.label || `Test ${i+1}` });
+      });
+    });
+    return out;
+  }, [docs]);
+
+  const profilePhotoUrl = imageFiles[0]?.url || (profile?.profileImage?.data ? `${SERVER_BASE}/api/patient/profile-image/${profile?.id || profile?._id || profile?.userId}` : "/logo.png");
+  const [photoLightbox, setPhotoLightbox] = useState<string | null>(null);
+
   const handleRefresh = () => { fetchProfile(); fetchMatches(); fetchDocuments(); toast({ title: "Data refreshed!" }); };
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
@@ -185,7 +219,7 @@ const PatientDashboard = () => {
         <div className="max-w-3xl mx-auto -mt-28 mb-10 px-4">
           <div className="rounded-3xl shadow-2xl border border-emerald-200 bg-white/40 backdrop-blur-2xl flex flex-col md:flex-row items-center gap-8 p-10 transition-all duration-300 hover:shadow-emerald-200/80">
             <div className="relative">
-              <img src="/logo.png" alt="Profile" className="h-40 w-40 rounded-full object-cover border-4 border-emerald-500 shadow-xl bg-white ring-4 ring-emerald-200" />
+              <img src={profilePhotoUrl} alt="Profile" className="h-40 w-40 rounded-full object-cover border-4 border-emerald-500 shadow-xl bg-white ring-4 ring-emerald-200" />
               <span className="absolute bottom-2 right-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full p-1 shadow-lg"></span>
             </div>
             <div className="flex-1 flex flex-col gap-3">
@@ -278,6 +312,26 @@ const PatientDashboard = () => {
                         <div className="mb-1"><span className="font-semibold">Required Organ:</span> {matches.find(m=> (m.status||'').toLowerCase()!=='rejected')?.organ || "N/A"}</div>
                       </div>
                     </div>
+                    {/* Quick photo thumbnails if any */}
+                    {imageFiles.length > 0 && (
+                      <div className="mt-6">
+                        <div className="mb-2 text-sm font-semibold text-slate-700">Your photos</div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {imageFiles.slice(0,8).map((f, i) => (
+                            <button
+                              type="button"
+                              key={f.url + i}
+                              className="group relative aspect-square rounded-lg overflow-hidden border bg-white/70 hover:shadow"
+                              onClick={() => setPhotoLightbox(f.url)}
+                              title={f.name || `Photo ${i+1}`}
+                            >
+                              <img src={f.url} alt={f.name || `Photo ${i+1}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                              <span className="absolute inset-x-0 bottom-0 text-[10px] text-white/95 bg-black/40 px-1 py-0.5 truncate">{f.name || `Photo ${i+1}`}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-6">
                       <Button variant="outline" onClick={() => (window.location.href = '/patient-profile-form')}>Edit Profile</Button>
                     </div>
@@ -460,6 +514,12 @@ const PatientDashboard = () => {
             </Card>
           )}
         </div>
+        {/* Photo Lightbox */}
+        {photoLightbox && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPhotoLightbox(null)} role="dialog" aria-modal="true">
+            <img src={photoLightbox} alt="Expanded photo" className="max-h-[85vh] w-auto max-w-[95vw] rounded-lg shadow-2xl border border-white/10" onClick={(e)=>e.stopPropagation()} />
+          </div>
+        )}
       </div>
     </AppLayout>
   );

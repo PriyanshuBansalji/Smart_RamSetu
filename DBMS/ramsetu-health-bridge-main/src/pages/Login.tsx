@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, ArrowLeft } from "lucide-react";
+import { Heart, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,11 +15,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const roleParam = searchParams.get("role");
-  const [role, setRole] = useState<"donor" | "patient" | "admin">(
-    (roleParam as "donor" | "patient" | "admin") || "donor"
+  const [role, setRole] = useState<"donor" | "patient">(
+    (roleParam === "patient" || roleParam === "donor" ? (roleParam as "donor" | "patient") : "donor")
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Modify the handleLoginSuccess function to redirect based on role
   const handleLoginSuccess = (response: any) => {
@@ -34,9 +35,6 @@ const Login = () => {
         break;
       case "patient":
         window.location.href = "/patient";
-        break;
-      case "admin":
-        window.location.href = "/admin";
         break;
       default:
         window.location.href = "/";
@@ -134,21 +132,33 @@ const Login = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder="labourzkart@gmail.com"
                     required
                     disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      required
+                      disabled={loading}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
               <Button type="submit" className="w-full mt-6" disabled={loading}>

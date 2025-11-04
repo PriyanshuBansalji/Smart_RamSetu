@@ -64,6 +64,7 @@ const Contact: React.FC = () => {
   const emailValid = useMemo(() => /.+@.+\..+/.test(form.email.trim()), [form.email]);
   const nameValid = form.name.trim().length >= 2;
   const messageValid = form.message.trim().length >= 10;
+  const messageLen = form.message.trim().length;
   const formValid = nameValid && emailValid && messageValid;
 
   // Get location from browser
@@ -144,6 +145,7 @@ const Contact: React.FC = () => {
                     type="text"
                     placeholder="Your full name"
                     required
+                    minLength={2}
                     className={`mt-1 w-full px-4 py-2 rounded-lg border ${nameValid ? "border-border" : "border-red-400"} focus:outline-none focus:ring-2 focus:ring-primary/40`}
                   />
                 </div>
@@ -161,7 +163,10 @@ const Contact: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-foreground">Message</label>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="message" className="block text-sm font-medium text-foreground">Message</label>
+                    <span className={`text-xs ${messageValid ? "text-muted-foreground" : "text-red-600"}`}>{messageLen}/10</span>
+                  </div>
                   <textarea
                     id="message"
                     name="message"
@@ -170,8 +175,12 @@ const Contact: React.FC = () => {
                     placeholder="How can we help?"
                     rows={4}
                     required
+                    minLength={10}
                     className={`mt-1 w-full px-4 py-2 rounded-lg border ${messageValid ? "border-border" : "border-red-400"} focus:outline-none focus:ring-2 focus:ring-primary/40`}
                   />
+                  {!messageValid && (
+                    <p className="mt-1 text-xs text-red-600">Please type at least 10 characters ({10 - Math.min(messageLen, 10)} more needed).</p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="location" className="block text-sm font-medium text-foreground">Location (optional)</label>
@@ -201,11 +210,20 @@ const Contact: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={loading || !formValid}
+                  // Allow click even when fields are invalid so the form can show an error message
+                  disabled={loading}
+                  aria-disabled={loading}
+                  title={!formValid && !loading ? `Please complete name (min 2), a valid email, and message (min 10). Currently ${messageLen}/10.` : undefined}
                   className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-2.5 rounded-xl shadow hover:opacity-95 disabled:opacity-60"
                 >
                   {loading ? "Sending…" : "Send message"}
                 </button>
+
+                {!formValid && (
+                  <p className="text-xs mt-2 text-red-600">
+                    Please enter your name (min 2 characters), a valid email, and a message of at least 10 characters.
+                  </p>
+                )}
               </form>
 
               {status && (
