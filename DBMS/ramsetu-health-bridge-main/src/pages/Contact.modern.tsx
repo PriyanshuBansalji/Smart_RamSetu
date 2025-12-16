@@ -30,7 +30,7 @@ const Contact = () => {
           alert("Unable to retrieve your location.");
           setLocating(false);
         }
-      );
+      ); 
     } else {
       alert("Geolocation is not supported by your browser.");
       setLocating(false);

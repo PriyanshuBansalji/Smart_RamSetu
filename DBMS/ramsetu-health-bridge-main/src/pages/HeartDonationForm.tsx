@@ -177,9 +177,9 @@ const HeartDonationForm = () => {
                 ? "Your heart donation request has been verified. Thank you for your life-saving decision."
                 : "Your request is under review. You cannot submit again until admin verification."}
             </p>
-            {serverStatus === "Verified" && (
-              <Button className="bg-gradient-to-r from-green-600 to-blue-700 text-white font-bold text-lg px-8 py-4 rounded-2xl shadow-lg">Download Certificate</Button>
-            )}
+            {/* {serverStatus === "Verified" && (
+              // <Button className="bg-gradient-to-r from-green-600 to-blue-700 text-white font-bold text-lg px-8 py-4 rounded-2xl shadow-lg">Download Certificate</Button>
+            )} */}
           </div>
         ) : (
           <form className="p-8 space-y-6" onSubmit={handleSubmit}>
