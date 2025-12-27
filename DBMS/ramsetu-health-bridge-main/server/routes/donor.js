@@ -91,6 +91,87 @@ router.get("/requests", authenticate, async (req, res) => {
   }
 });
 
+// Get all verified donations (for patients to view available donors)
+router.get("/donations", async (req, res) => {
+  try {
+    // Get all verified donation requests, sorted by donor and createdAt
+    const donations = await DonationRequest.find({ status: "Verified" })
+      .populate("donor", "fullName name email city state bloodGroup")
+      .sort({ "donor": 1, "createdAt": -1 });
+    
+    // Group donations by donor userId - use a simple object map
+    const donorMap = new Map();
+    
+    // Process each donation request
+    for (const d of donations) {
+      const userId = d.donor?._id?.toString() || "unknown";
+      
+      // If this is a new donor, initialize their entry
+      if (!donorMap.has(userId)) {
+        let donorInfo = {
+          fullName: d.donor?.fullName,
+          name: d.donor?.name,
+          email: d.donor?.email || d.email,
+          city: d.donor?.city,
+          state: d.donor?.state,
+          bloodGroup: d.donor?.bloodGroup
+        };
+
+        // If donor info is incomplete, try to fetch from Donor collection
+        if (!donorInfo.fullName || !donorInfo.city) {
+          try {
+            const donorProfile = await Donor.findOne({ userId }).select("fullName name city state bloodGroup email");
+            if (donorProfile) {
+              donorInfo = {
+                fullName: donorProfile.fullName || donorInfo.fullName,
+                name: donorProfile.name || donorInfo.name,
+                email: donorProfile.email || donorInfo.email,
+                city: donorProfile.city || donorInfo.city,
+                state: donorProfile.state || donorInfo.state,
+                bloodGroup: donorProfile.bloodGroup || donorInfo.bloodGroup
+              };
+            }
+          } catch (e) {
+            // Ignore Donor lookup errors
+          }
+        }
+
+        donorMap.set(userId, {
+          _id: userId,
+          userId,
+          ...donorInfo,
+          organs: [],
+          donations: [],
+          status: "Verified",
+          createdAt: d.createdAt
+        });
+      }
+
+      // Get the donor entry
+      const donorEntry = donorMap.get(userId);
+      
+      // Add organ if not already present
+      if (!donorEntry.organs.includes(d.organ)) {
+        donorEntry.organs.push(d.organ);
+      }
+      
+      // Track the donation record
+      donorEntry.donations.push({
+        requestId: d._id.toString(),
+        organ: d.organ
+      });
+    }
+
+    // Convert map to array
+    const result = Array.from(donorMap.values());
+
+    res.json(result);
+  } catch (err) {
+    console.error("Error in /donations endpoint:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Create or update donor profile
 router.put("/profile", authenticate, upload.any(), async (req, res) => {
   try {

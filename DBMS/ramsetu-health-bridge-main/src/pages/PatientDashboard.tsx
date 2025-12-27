@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Card,
@@ -50,7 +51,8 @@ function getTokenAndUserId() {
 
 const TABS = [
   { key: "profile", label: "Profile", icon: <User className="w-4 h-4 mr-1" /> },
-  { key: "matches", label: "Matches", icon: <List className="w-4 h-4 mr-1" /> },
+  { key: "donors", label: "Available Donors", icon: <Heart className="w-4 h-4 mr-1" /> },
+  { key: "matches", label: "My Matches", icon: <List className="w-4 h-4 mr-1" /> },
   { key: "documents", label: "Documents", icon: <FileText className="w-4 h-4 mr-1" /> },
   { key: "feedback", label: "Feedback", icon: <ShieldCheck className="w-4 h-4 mr-1" /> },
 ];
@@ -64,7 +66,17 @@ const ICONS: Record<string, JSX.Element> = {
 
 const formatDateTime = (d?: string) => { try { return d ? new Date(d).toLocaleString() : "—"; } catch { return d || "—"; } };
 
+const organOptions = [
+  { label: "Kidney", path: "/donate/kidney" },
+  { label: "Liver", path: "/donate/liver" },
+  { label: "Heart", path: "/donate/heart" },
+  { label: "Cornea", path: "/donate/cornea" },
+];
+
 const PatientDashboard = () => {
+    const [showOrganModal, setShowOrganModal] = useState(false);
+    const [selectedOrgan, setSelectedOrgan] = useState(organOptions[0].label);
+    const navigate = useNavigate();
   const [tab, setTab] = useState("profile");
   const { toast } = useToast();
 
@@ -79,6 +91,12 @@ const PatientDashboard = () => {
   const [docs, setDocs] = useState<DocItem[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [docsError, setDocsError] = useState<string | null>(null);
+
+  const [donors, setDonors] = useState<any[]>([]);
+  const [donorsLoading, setDonorsLoading] = useState(false);
+  const [donorsError, setDonorsError] = useState<string | null>(null);
+  const [donorSearchQuery, setDonorSearchQuery] = useState("");
+  const [selectedOrganFilter, setSelectedOrganFilter] = useState("");
 
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -130,8 +148,20 @@ const PatientDashboard = () => {
     finally { setDocsLoading(false); }
   };
 
+  const fetchDonors = async () => {
+    setDonorsLoading(true); setDonorsError(null);
+    try {
+      const res = await axios.get(`${API_URL}/donor/donations`, {
+        validateStatus: () => true,
+      });
+      if (res.status === 404 || res.status === 500) { setDonorsError("Failed to fetch donors."); setDonors([]); return; }
+      setDonors(Array.isArray(res.data) ? res.data : []);
+    } catch { setDonorsError("Failed to fetch donors."); setDonors([]); }
+    finally { setDonorsLoading(false); }
+  };
+
   useEffect(() => { fetchProfile(); }, []);
-  useEffect(() => { fetchMatches(); fetchDocuments(); }, [profile]);
+  useEffect(() => { fetchMatches(); fetchDocuments(); fetchDonors(); }, [profile]);
 
   // Derive image files from documents to show in Profile (photos user has input/uploaded)
   const imageFiles = useMemo(() => {
@@ -166,6 +196,20 @@ const PatientDashboard = () => {
 
   const profilePhotoUrl = imageFiles[0]?.url || (profile?.profileImage?.data ? `${SERVER_BASE}/api/patient/profile-image/${profile?.id || profile?._id || profile?.userId}` : "/logo.png");
   const [photoLightbox, setPhotoLightbox] = useState<string | null>(null);
+
+  const filteredDonors = useMemo(() => {
+    return donors.filter(d => {
+      const matchesQuery = !donorSearchQuery || 
+        (d.fullName?.toLowerCase().includes(donorSearchQuery.toLowerCase())) ||
+        (d.name?.toLowerCase().includes(donorSearchQuery.toLowerCase())) ||
+        (d.city?.toLowerCase().includes(donorSearchQuery.toLowerCase())) ||
+        (d.bloodGroup?.toLowerCase().includes(donorSearchQuery.toLowerCase()));
+      
+      const matchesOrgan = !selectedOrganFilter || (d.organs && d.organs.includes(selectedOrganFilter));
+      
+      return matchesQuery && matchesOrgan;
+    });
+  }, [donors, donorSearchQuery, selectedOrganFilter]);
 
   const handleRefresh = () => { fetchProfile(); fetchMatches(); fetchDocuments(); toast({ title: "Data refreshed!" }); };
 
@@ -332,13 +376,135 @@ const PatientDashboard = () => {
                         </div>
                       </div>
                     )}
-                    <div className="mt-6">
+                    <div className="mt-6 flex gap-3 flex-wrap">
                       <Button variant="outline" onClick={() => (window.location.href = '/patient-profile-form')}>Edit Profile</Button>
+                      <Button className="bg-gradient-to-r from-emerald-600 to-blue-500 text-white font-bold" onClick={() => setShowOrganModal(true)}>
+                        Apply for Organ
+                      </Button>
                     </div>
+
+                    {/* Organ Selection Modal */}
+                    {showOrganModal && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col items-center">
+                          <h3 className="text-xl font-bold mb-4 text-emerald-700">Select Organ to Apply</h3>
+                          <select
+                            className="w-full mb-6 p-2 border rounded-lg focus:ring-2 focus:ring-emerald-400"
+                            value={selectedOrgan}
+                            onChange={e => setSelectedOrgan(e.target.value)}
+                          >
+                            {organOptions.map(o => (
+                              <option key={o.label} value={o.label}>{o.label}</option>
+                            ))}
+                          </select>
+                          <div className="flex gap-3 w-full">
+                            <Button variant="outline" className="flex-1" onClick={() => setShowOrganModal(false)}>Cancel</Button>
+                            <Button className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-500 text-white font-bold"
+                              onClick={() => {
+                                setShowOrganModal(false);
+                                const organ = organOptions.find(o => o.label === selectedOrgan);
+                                if (organ) {
+                                  navigate(`/common-donation-form?organ=${organ.label}&role=patient`);
+                                }
+                              }}
+                            >
+                              Continue
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
             </>
+          )}
+
+          {tab === "donors" && (
+            <Card className="rounded-2xl shadow-lg border-2 border-emerald-100 mb-8 bg-white/70 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="text-emerald-900 text-2xl font-bold">Available Verified Donors</CardTitle>
+                <CardDescription className="text-emerald-700">Browse verified organ donors matching your needs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Search & Filter */}
+                <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Search</label>
+                      <Input 
+                        placeholder="Name, city, blood group..." 
+                        value={donorSearchQuery}
+                        onChange={e => setDonorSearchQuery(e.target.value)}
+                        className="border-emerald-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Filter by Organ</label>
+                      <select 
+                        value={selectedOrganFilter}
+                        onChange={e => setSelectedOrganFilter(e.target.value)}
+                        className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="">All organs</option>
+                        {['Kidney', 'Liver', 'Heart', 'Cornea'].map(organ => (
+                          <option key={organ} value={organ}>{organ}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Donors List */}
+                {donorsLoading ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-48 rounded-2xl bg-white border border-slate-200/50 animate-pulse" />
+                    ))}
+                  </div>
+                ) : donorsError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">{donorsError}</div>
+                ) : filteredDonors.length === 0 ? (
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center text-slate-600">
+                    No donors match your criteria
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredDonors.map(d => (
+                      <div key={d._id} className="group rounded-2xl bg-white border border-slate-200/50 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 p-5 cursor-pointer">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center border-2 border-emerald-200">
+                            {d.fullName?.charAt(0) || d.name?.charAt(0) || "?"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-bold text-slate-900 truncate">{d.fullName || d.name || "N/A"}</div>
+                            <div className="text-xs text-slate-500 truncate">{d.city && d.state ? `${d.city}, ${d.state}` : d.city || "—"}</div>
+                          </div>
+                          {d.bloodGroup && (
+                            <Badge className="bg-emerald-100 text-emerald-700 font-semibold text-xs">
+                              {d.bloodGroup}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {d.organs && d.organs.map((organ, idx) => (
+                            <Badge key={`${d._id}-${idx}`} className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-xs">
+                              {organ}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-all duration-300"
+                        >
+                          View Profile
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {tab === "matches" && (
@@ -359,16 +525,36 @@ const PatientDashboard = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {matches.map((m:any) => {
                           const status = (m.status||'pending').toLowerCase();
-                          const donor = m.donorSummary || {};
+                          const donors = Array.isArray(m.rankedMatches) ? m.rankedMatches : [];
                           return (
                             <div key={m._id} className="p-4 border rounded-xl bg-white/80 mb-2 hover:shadow-md transition-shadow">
                               <p><strong>Organ:</strong> {m.organ}</p>
-                              <p><strong>Status:</strong> {status}</p>
-                              {status === 'approved' && (
-                                <div className="mt-2 text-sm">
-                                  <p><strong>Donor:</strong> {donor.fullName || donor.name || '—'}</p>
-                                  <p><strong>Email:</strong> {donor.email || '—'}</p>
-                                  <p><strong>Phone:</strong> {donor.phone || donor.contact || '—'}</p>
+                              <p><strong>Status:</strong> <span className={`font-semibold ${status==='matched'?'text-green-700':status==='pending'?'text-yellow-600':'text-gray-600'}`}>{status}</span></p>
+                              {typeof m.matchScore === 'number' && (
+                                <p className="text-emerald-700 font-bold">Best Match Score: {m.matchScore.toFixed(3)}</p>
+                              )}
+                              {donors.length > 0 && (
+                                <div className="mt-3">
+                                  <div className="font-semibold text-emerald-800 mb-1">Top Matched Donors:</div>
+                                  <div className="space-y-2">
+                                    {donors.map((d:any, idx:number) => (
+                                      <div key={d.donorId || idx} className="p-3 rounded-lg border bg-emerald-50 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                        <div>
+                                          <span className="font-semibold text-lg">{d.donorProfile?.fullName || d.donorProfile?.name || d.donorId || 'Donor'}</span>
+                                          {d.donorProfile?.email && <span className="ml-2 text-xs text-slate-600">({d.donorProfile.email})</span>}
+                                          {d.donorProfile?.bloodGroup && <span className="ml-2">[{d.donorProfile.bloodGroup}]</span>}
+                                          <span className="ml-2 text-green-700 font-semibold">Score: {d.score?.toFixed(3) ?? '--'}</span>
+                                        </div>
+                                        <button
+                                          className="bg-emerald-600 text-white px-3 py-1 rounded disabled:opacity-60 hover:bg-emerald-700 transition"
+                                          // TODO: Implement request action
+                                          disabled={false}
+                                        >
+                                          Request from this donor
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                               <p className="text-xs text-muted-foreground mt-1">Updated: {formatDateTime(m.updatedAt)}</p>

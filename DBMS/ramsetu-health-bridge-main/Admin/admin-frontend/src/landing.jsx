@@ -1,10 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-// Lightweight inline search icon
+// Icons
 function SearchIcon({ className = '' }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" aria-hidden="true" focusable="false">
       <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.11 12.12l4.26 4.26a.75.75 0 1 0 1.06-1.06l-4.26-4.26A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function TrendingIcon({ className = '' }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2.75 12a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0ZM8.75 6.75a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0ZM15 2.75a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0Z" />
+      <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M2 13v6m5.25-9.5L9.75 8m5.25-3.75L17 5.5" />
+    </svg>
+  );
+}
+
+function UserGroupIcon({ className = '' }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 1a5 5 0 1 0 0 10A5 5 0 0 0 12 1zm0 13c-5.33 0-8 2.67-8 8v2h16v-2c0-5.33-2.67-8-8-8z" />
+    </svg>
+  );
+}
+
+function HeartIcon({ className = '' }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
 }

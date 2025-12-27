@@ -146,124 +146,186 @@ const About: React.FC = () => {
         </section>
 
         {/* Mission / Vision / Values */}
-        <section id="mission" className="py-14 px-6 bg-background">
-          <div className="container mx-auto max-w-6xl grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "Our Mission",
-                text: "Make organ donation and matching transparent, secure, and accessible for everyone.",
-                Icon: Activity,
-              },
-              {
-                title: "Our Vision",
-                text: "Bridge the gap between hope and healing using responsible technology and human-first design.",
-                Icon: ShieldCheck,
-              },
-              {
-                title: "Our Values",
-                text: "Compassion • Transparency • Security • Innovation • Community",
-                Icon: Users,
-              },
-            ].map(({ title, text, Icon }) => (
-              <div key={title} className="rounded-xl border border-border bg-white p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-lg">{title}</h3>
-                </div>
-                <p className="text-muted-foreground text-sm">{text}</p>
+        <section id="mission" className="py-16 px-6 bg-gradient-to-b from-white via-blue-50 to-green-50">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-full border-2 border-blue-200 mb-4">
+                <span className="text-lg">💡</span>
+                <span className="font-semibold text-blue-700">Our Foundation</span>
               </div>
-            ))}
+              <h2 className="text-4xl md:text-5xl font-extrabold mb-3 text-gray-900">Core Values That Guide Us</h2>
+              <p className="text-gray-600 max-w-3xl mx-auto text-lg">Mission, vision, and values that drive everything we do to bridge hope with compassion</p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-3">
+              {[
+                {
+                  title: "🎯 Our Mission",
+                  text: "Make organ donation and matching transparent, secure, and accessible for everyone.",
+                  Icon: Activity,
+                  bgColor: "from-blue-50 to-cyan-50",
+                  borderColor: "border-blue-300",
+                  accentColor: "bg-blue-200",
+                  shadowColor: "shadow-blue-200",
+                },
+                {
+                  title: "🌟 Our Vision",
+                  text: "Bridge the gap between hope and healing using responsible technology and human-first design.",
+                  Icon: ShieldCheck,
+                  bgColor: "from-green-50 to-emerald-50",
+                  borderColor: "border-green-300",
+                  accentColor: "bg-green-200",
+                  shadowColor: "shadow-green-200",
+                },
+                {
+                  title: "❤️ Our Values",
+                  text: "Compassion • Transparency • Security • Innovation • Community",
+                  Icon: Users,
+                  bgColor: "from-purple-50 to-pink-50",
+                  borderColor: "border-purple-300",
+                  accentColor: "bg-purple-200",
+                  shadowColor: "shadow-purple-200",
+                },
+              ].map(({ title, text, Icon, bgColor, borderColor, accentColor, shadowColor }) => (
+                <div key={title} className={`rounded-2xl border-2 ${borderColor} bg-gradient-to-br ${bgColor} p-8 shadow-xl ${shadowColor} hover:shadow-2xl transition-all duration-300 hover:scale-105 transform group`}>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`p-4 rounded-xl ${accentColor} group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="h-7 w-7 text-gray-900" />
+                    </div>
+                    <h3 className="font-bold text-xl text-gray-900">{title}</h3>
+                  </div>
+                  <p className="text-gray-700 text-base leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Video + Key Points */}
-        <section className="py-14 px-6 bg-white border-t border-border">
-          <div className="container mx-auto max-w-6xl grid gap-8 md:grid-cols-3">
-            <div className="md:col-span-2 rounded-2xl overflow-hidden shadow border border-border">
-              <div className="bg-gray-50 p-3 flex items-center gap-2 border-b border-border">
-                <PlayCircle className="h-5 w-5 text-primary" />
-                <div className="font-semibold">How it works</div>
-              </div>
-              <div className="bg-black/5">
-                {(() => {
-                  const embed = toYouTubeEmbed(ABOUT_VIDEO_URL);
-                  if (embed) {
-                    return (
-                      <div className="relative aspect-video">
-                        <iframe
-                          src={embed}
-                          title="About RamSetu"
-                          className="absolute inset-0 h-full w-full"
-                          loading="lazy"
-                          referrerPolicy="strict-origin-when-cross-origin"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                        />
-                      </div>
-                    );
-                  }
-                  return (
-                    <video className="w-full h-auto" controls preload="metadata">
-                      <source src={ABOUT_VIDEO_URL} />
-                      Your browser does not support the video tag.
-                    </video>
-                  );
-                })()}
+        <section className="py-20 px-6 bg-gradient-to-br from-white via-blue-50 to-green-50">
+          <div className="container mx-auto max-w-6xl">
+            <div className="mb-8">
+              <div className="inline-flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-full border-2 border-blue-200">
+                <span className="text-lg">🎬</span>
+                <span className="font-semibold text-blue-700">How We Work</span>
               </div>
             </div>
-            <div className="space-y-4">
-              {["Privacy-first profiles", "Admin-verified documents", "Smart matching logic", "Compassionate support"].map((p) => (
-                <div key={p} className="p-3 rounded-lg border border-border bg-muted/40">
-                  <div className="font-medium">{p}</div>
-                  <p className="text-xs text-muted-foreground">We’re building responsibly to keep people safe and informed.</p>
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="md:col-span-2 rounded-2xl overflow-hidden shadow-2xl border-4 border-blue-200 hover:shadow-3xl hover:border-blue-400 transition-all duration-300 hover:scale-105 transform origin-bottom-left group bg-black/5">
+                <div className="bg-gradient-to-r from-blue-600 to-green-600 p-5 flex items-center gap-3 border-b-4 border-blue-300">
+                  <PlayCircle className="h-6 w-6 text-white animate-pulse" />
+                  <div className="font-bold text-white text-lg">🎥 How RamSetu Works</div>
                 </div>
-              ))}
-              <a href="/contact" className="inline-flex items-center gap-2 text-primary hover:underline text-sm">
-                Contact our team <ArrowRight className="h-4 w-4" />
-              </a>
+                <div className="bg-gray-900 relative overflow-hidden">
+                  {(() => {
+                    const embed = toYouTubeEmbed(ABOUT_VIDEO_URL);
+                    if (embed) {
+                      return (
+                        <div className="relative aspect-video">
+                          <iframe
+                            src={embed}
+                            title="About RamSetu"
+                            className="absolute inset-0 h-full w-full group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <video className="w-full h-auto group-hover:scale-105 transition-transform duration-300" controls preload="metadata">
+                        <source src={ABOUT_VIDEO_URL} />
+                        Your browser does not support the video tag.
+                      </video>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { emoji: "🔐", title: "Privacy-first profiles", desc: "Your data is encrypted and protected with industry standards" },
+                  { emoji: "✅", title: "Admin-verified documents", desc: "All documents verified by certified healthcare professionals" },
+                  { emoji: "🧠", title: "Smart matching logic", desc: "Advanced algorithm finds the best patient-donor matches" },
+                  { emoji: "❤️", title: "Compassionate support", desc: "24/7 support team to guide you through every step" },
+                ].map((p) => (
+                  <div key={p.title} className="p-5 rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 hover:border-blue-400 hover:shadow-lg transition-all duration-300 transform hover:scale-105 group/card">
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl group-hover/card:scale-125 transition-transform duration-300">{p.emoji}</span>
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-900 text-base">{p.title}</div>
+                        <p className="text-sm text-gray-600 mt-1 leading-relaxed">{p.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <a href="/contact" className="inline-flex items-center justify-center gap-2 w-full text-white bg-gradient-to-r from-blue-600 to-green-600 hover:shadow-lg hover:from-blue-700 hover:to-green-700 px-6 py-4 rounded-xl font-bold transition-all duration-200 hover:scale-105 text-base">
+                  Contact our team <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Gallery */}
-        <section className="py-14 px-6 bg-muted">
+        <section className="py-20 px-6 bg-gradient-to-br from-blue-50 via-green-50 to-cyan-50">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">In pictures</h2>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="mb-12">
+              <div className="inline-flex items-center gap-3 mb-4">
+                <span className="text-4xl">📸</span>
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900">Gallery & Moments</h2>
+                </div>
+              </div>
+              <p className="text-gray-700 mb-2 max-w-3xl text-lg font-medium">Snapshots from our community of donors and patients making a difference together.</p>
+              <div className="h-1 w-32 bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               {galleryImages.slice(0, 10).map((src, idx) => (
                 <figure
                   key={src + idx}
-                  className={`relative overflow-hidden rounded-xl border border-border shadow group cursor-pointer ${idx % 5 === 0 ? "col-span-2 md:col-span-3 row-span-2" : "col-span-1"}`}
+                  className={`relative overflow-hidden rounded-2xl border-4 border-white shadow-lg group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:border-blue-300 ${idx % 5 === 0 ? "col-span-2 md:col-span-3 row-span-2" : "col-span-1"}`}
                   onClick={() => setLightbox(src)}
                 >
                   <div className={idx % 5 === 0 ? "aspect-[16/10]" : "aspect-[4/3]"}>
                     <img
                       src={src}
                       alt={`About gallery ${idx + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                       onError={(e: any) => {
                         e.currentTarget.src =
                           "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1200&auto=format&fit=crop";
                       }}
                     />
                   </div>
-                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition">
-                    Moment {idx + 1}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center">
+                    <span className="text-white text-4xl font-bold animate-bounce">🔍</span>
+                    <p className="text-white text-sm font-semibold mt-2">View Image</p>
+                  </div>
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent text-white text-xs px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">
+                    Moment #{idx + 1}
                   </figcaption>
                 </figure>
               ))}
             </div>
             {lightbox && (
               <div
-                className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-md"
                 onClick={() => setLightbox(null)}
                 role="dialog"
                 aria-modal="true"
               >
+                <button
+                  onClick={() => setLightbox(null)}
+                  className="absolute top-6 right-6 text-white text-4xl hover:text-red-400 transition-colors font-bold"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
                 <img
                   src={lightbox}
                   alt="Expanded gallery"
-                  className="max-h-[85vh] w-auto max-w-[95vw] rounded-lg shadow-2xl border border-white/10"
+                  className="max-h-[85vh] w-auto max-w-[95vw] rounded-2xl shadow-2xl border-4 border-white/30 animate-fade-in"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -272,17 +334,43 @@ const About: React.FC = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-14 px-6 bg-white border-t border-border">
-          <div className="container mx-auto max-w-3xl text-center">
-            <h3 className="text-2xl font-bold mb-2">Ready to be part of the bridge?</h3>
-            <p className="text-muted-foreground mb-5">Whether you’re a donor or seeking support for a loved one, we’re here to help.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a href="/signup?role=donor" className="bg-primary text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-primary/90 transition">Register as Donor</a>
-              <a href="/signup?role=patient" className="bg-accent text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-accent/90 transition">Register as Patient</a>
+        <section className="py-20 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-green-500 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-15">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="dots-cta" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <circle cx="20" cy="20" r="2" fill="white" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dots-cta)" />
+            </svg>
+          </div>
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-white/20 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
+          </div>
+          <div className="container mx-auto max-w-4xl text-center relative z-10">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full border border-white/30 mb-6">
+              <span className="text-lg">🌉</span>
+              <span className="font-semibold">Next Steps</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-3">
-              <a href="/login?role=donor" className="px-6 py-3 rounded-lg font-semibold border border-border text-foreground bg-white hover:bg-muted transition">Login as Donor</a>
-              <a href="/login?role=patient" className="px-6 py-3 rounded-lg font-semibold border border-border text-foreground bg-white hover:bg-muted transition">Login as Patient</a>
+            <h3 className="text-5xl md:text-6xl font-extrabold mb-6 drop-shadow-lg leading-tight">Ready to be part of the bridge?</h3>
+            <p className="text-white/95 mb-10 text-xl max-w-3xl mx-auto leading-relaxed">Whether you're a donor or seeking support for a loved one, we're here to help you make a life-changing difference. Join thousands of compassionate people saving lives.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <a href="/signup?role=donor" className="inline-flex items-center justify-center gap-2 bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-xl font-bold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-200 text-lg">
+                ✅ Become a Donor
+              </a>
+              <a href="/signup?role=patient" className="inline-flex items-center justify-center gap-2 bg-white text-green-600 hover:bg-green-50 px-8 py-4 rounded-xl font-bold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-200 text-lg">
+                💊 Become a Recipient
+              </a>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/signin?role=donor" className="inline-flex items-center justify-center gap-2 bg-white/15 text-white px-6 py-3 rounded-xl font-semibold border-2 border-white/40 hover:bg-white/25 hover:border-white/60 backdrop-blur transition-all duration-200 hover:scale-105">
+                Login as Donor
+              </a>
+              <a href="/signin?role=patient" className="inline-flex items-center justify-center gap-2 bg-white/15 text-white px-6 py-3 rounded-xl font-semibold border-2 border-white/40 hover:bg-white/25 hover:border-white/60 backdrop-blur transition-all duration-200 hover:scale-105">
+                Login as Recipient
+              </a>
             </div>
           </div>
         </section>

@@ -121,22 +121,42 @@ const Contact: React.FC = () => {
     <AppLayout>
       <section className="relative">
         {/* Hero */}
-        <div className="bg-gradient-to-br from-primary/90 to-accent/80 text-white">
-          <div className="container mx-auto px-6 py-12">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Contact us</h1>
-            <p className="text-white/90 mt-2 max-w-2xl">Have questions or feedback? We’d love to hear from you. Send us a message and we’ll respond promptly.</p>
+        <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 text-white relative overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <circle cx="20" cy="20" r="2" fill="white" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+          </div>
+          <div className="container mx-auto px-6 py-16 relative z-10">
+            <div className="max-w-2xl">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-4 animate-fade-in">
+                📬 Get in touch
+              </h1>
+              <p className="text-blue-100/90 text-lg max-w-xl">
+                We'd love to hear from you. Send us a message and our team will respond promptly with any questions or feedback.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="container mx-auto px-6 -mt-6 pb-12">
+        <div className="container mx-auto px-6 -mt-8 pb-16">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Form card */}
-            <div className="rounded-xl bg-white border border-border shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Send us a message</h2>
-              <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+            <div className="rounded-2xl bg-white border border-blue-100 shadow-2xl p-8 transform hover:shadow-3xl transition-all duration-300">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-2xl">✉️</span>
+                <h2 className="text-2xl font-extrabold text-gray-900">Send us a message</h2>
+              </div>
+              <form className="space-y-5" onSubmit={handleSubmit} noValidate>
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">Name</label>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">Name</label>
                   <input
                     id="name"
                     name="name"
@@ -146,11 +166,12 @@ const Contact: React.FC = () => {
                     placeholder="Your full name"
                     required
                     minLength={2}
-                    className={`mt-1 w-full px-4 py-2 rounded-lg border ${nameValid ? "border-border" : "border-red-400"} focus:outline-none focus:ring-2 focus:ring-primary/40`}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none ${nameValid ? "border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200" : "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100"}`}
                   />
+                  {!nameValid && form.name && <p className="text-xs text-red-600 mt-1">🚫 Name must be at least 2 characters</p>}
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">Email</label>
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">Email</label>
                   <input
                     id="email"
                     name="email"
@@ -159,32 +180,37 @@ const Contact: React.FC = () => {
                     type="email"
                     placeholder="you@example.com"
                     required
-                    className={`mt-1 w-full px-4 py-2 rounded-lg border ${emailValid ? "border-border" : "border-red-400"} focus:outline-none focus:ring-2 focus:ring-primary/40`}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none ${emailValid ? "border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200" : "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100"}`}
                   />
+                  {!emailValid && form.email && <p className="text-xs text-red-600 mt-1">🚫 Please enter a valid email address</p>}
                 </div>
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="message" className="block text-sm font-medium text-foreground">Message</label>
-                    <span className={`text-xs ${messageValid ? "text-muted-foreground" : "text-red-600"}`}>{messageLen}/10</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="message" className="block text-sm font-semibold text-gray-900">Message</label>
+                    <span className={`text-xs font-semibold ${messageValid ? "text-green-600" : "text-red-600"}`}>
+                      {messageLen}/10 characters
+                    </span>
                   </div>
                   <textarea
                     id="message"
                     name="message"
                     value={form.message}
                     onChange={handleChange}
-                    placeholder="How can we help?"
-                    rows={4}
+                    placeholder="How can we help? Be as detailed as possible..."
+                    rows={5}
                     required
                     minLength={10}
-                    className={`mt-1 w-full px-4 py-2 rounded-lg border ${messageValid ? "border-border" : "border-red-400"} focus:outline-none focus:ring-2 focus:ring-primary/40`}
+                    className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none resize-none ${messageValid ? "border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200" : "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100"}`}
                   />
-                  {!messageValid && (
-                    <p className="mt-1 text-xs text-red-600">Please type at least 10 characters ({10 - Math.min(messageLen, 10)} more needed).</p>
-                  )}
+                  <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 ${messageValid ? "bg-green-500 w-full" : `bg-red-500 w-[${Math.min(messageLen, 10) * 10}%]`}`}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-foreground">Location (optional)</label>
-                  <div className="flex gap-2 mt-1">
+                  <label htmlFor="location" className="block text-sm font-semibold text-gray-900 mb-2">📍 Location (optional)</label>
+                  <div className="flex gap-2">
                     <input
                       id="location"
                       name="location"
@@ -192,36 +218,35 @@ const Contact: React.FC = () => {
                       onChange={handleChange}
                       type="text"
                       placeholder="lat,lng or address"
-                      className="flex-1 px-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                     />
                     <button
                       type="button"
                       onClick={handleGetLocation}
                       disabled={locating}
-                      className="inline-flex items-center justify-center whitespace-nowrap rounded-lg bg-primary text-white px-4 py-2 font-semibold shadow hover:bg-primary/90 disabled:opacity-60"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-600 to-green-600 text-white px-5 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-60 transition-all duration-200"
                     >
-                      {locating ? "Locating…" : "Use my location"}
+                      {locating ? "📍 Locating…" : "📍 My location"}
                     </button>
                   </div>
                   {position && (
-                    <div className="text-xs text-muted-foreground mt-1">Detected: {form.location}</div>
+                    <div className="text-xs text-green-600 mt-2 font-semibold">✅ Location detected: {form.location}</div>
                   )}
                 </div>
 
                 <button
                   type="submit"
-                  // Allow click even when fields are invalid so the form can show an error message
                   disabled={loading}
                   aria-disabled={loading}
                   title={!formValid && !loading ? `Please complete name (min 2), a valid email, and message (min 10). Currently ${messageLen}/10.` : undefined}
-                  className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-2.5 rounded-xl shadow hover:opacity-95 disabled:opacity-60"
+                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-60 transition-all duration-200 mt-2"
                 >
-                  {loading ? "Sending…" : "Send message"}
+                  {loading ? "⏳ Sending…" : "🚀 Send message"}
                 </button>
 
                 {!formValid && (
-                  <p className="text-xs mt-2 text-red-600">
-                    Please enter your name (min 2 characters), a valid email, and a message of at least 10 characters.
+                  <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                    ⚠️ Please enter your name (min 2 characters), a valid email, and a message of at least 10 characters.
                   </p>
                 )}
               </form>
@@ -229,29 +254,57 @@ const Contact: React.FC = () => {
               {status && (
                 <div
                   role="alert"
-                  className={`mt-4 rounded-lg border p-3 text-sm ${status.type === "success" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"}`}
+                  className={`mt-6 rounded-xl border-2 p-4 text-sm font-semibold shadow-lg animate-in fade-in zoom-in-95 duration-300 ${status.type === "success" ? "border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 shadow-green-200" : "border-red-400 bg-gradient-to-r from-red-50 to-rose-50 text-red-800 shadow-red-200"}`}
                 >
-                  {status.message}
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg mt-0.5">{status.type === "success" ? "✅" : "❌"}</span>
+                    <span>{status.message}</span>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Contact details & map */}
-            <div className="rounded-xl bg-white border border-border shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Other ways to reach us</h2>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  Email: <a href="mailto:labourzkart@gmail.com" className="text-primary hover:underline">labourzkart@gmail.com</a>
-                </li>
-                <li>
-                  Phone: <a href="tel:+917505675163" className="text-primary hover:underline">+91 75056 75163</a>
-                </li>
-                <li>Hours: Mon–Fri, 9:00–18:00 IST</li>
-              </ul>
+            <div className="space-y-6">
+              <div className="rounded-2xl bg-white border border-blue-100 shadow-2xl p-8 hover:shadow-3xl transition-all duration-300">
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="text-2xl">📞</span>
+                  <h2 className="text-2xl font-extrabold text-gray-900">Other ways to reach us</h2>
+                </div>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                    <span className="text-2xl mt-0.5">📧</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Email</div>
+                      <a href="mailto:labourzkart@gmail.com" className="text-blue-600 font-bold hover:text-blue-800 text-lg hover:underline transition">labourzkart@gmail.com</a>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-100 rounded-xl border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                    <span className="text-2xl mt-0.5">☎️</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Phone</div>
+                      <a href="tel:+917505675163" className="text-green-600 font-bold hover:text-green-800 text-lg hover:underline transition">+91 75056 75163</a>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3 p-4 bg-gradient-to-r from-purple-50 to-fuchsia-100 rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                    <span className="text-2xl mt-0.5">🕐</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Hours</div>
+                      <p className="text-purple-700 font-bold text-lg">Mon–Fri, 9:00–18:00 IST</p>
+                      <p className="text-purple-600 text-xs mt-1">📞 Emergency support available 24/7</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
 
-              <div className="mt-4">
+              <div className="rounded-2xl bg-white border border-blue-100 shadow-2xl p-8 hover:shadow-3xl transition-all duration-300">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🗺️</span>
+                  <h3 className="text-xl font-extrabold text-gray-900">Location Map</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">Select your location to help us better serve you</p>
                 {position ? (
-                  <MapContainer center={position} zoom={15} style={{ height: "260px", width: "100%", borderRadius: "0.75rem" }}>
+                  <MapContainer center={position} zoom={15} style={{ height: "300px", width: "100%", borderRadius: "1rem", border: "3px solid #e0f2fe" }}>
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <ClickToSetMarker
                       onPick={(lat, lng) => {
@@ -263,8 +316,14 @@ const Contact: React.FC = () => {
                     <Marker position={position} />
                   </MapContainer>
                 ) : (
-                  <div className="h-[260px] w-full rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center text-sm text-muted-foreground">
-                    Map preview will appear after you set your location (or click "Use my location").
+                  <div className="h-80 w-full rounded-xl border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 flex flex-col items-center justify-center text-center p-6 gap-3 hover:border-blue-400 hover:shadow-lg transition-all">
+                    <span className="text-5xl animate-bounce">🗺️</span>
+                    <p className="text-base font-semibold text-blue-900">Enable Location to See Map</p>
+                    <p className="text-xs text-blue-600">Click "My location" button above or enter coordinates manually to display the map</p>
+                    <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 bg-blue-100 border border-blue-300 rounded-lg">
+                      <span>💡</span>
+                      <span className="text-xs text-blue-700">Tip: We only collect location with your permission</span>
+                    </div>
                   </div>
                 )}
               </div>

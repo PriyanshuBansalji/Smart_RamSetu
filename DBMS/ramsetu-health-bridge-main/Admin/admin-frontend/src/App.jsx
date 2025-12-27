@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Dashboard from './landing.jsx';
 import LoginPage from './login.jsx';
+import { apiClient, ApiError } from './utils/apiClient.js';
+import { API_CONFIG, STORAGE_KEYS, ERROR_MESSAGES, SUCCESS_MESSAGES } from './config.js';
 
 function App() {
-  // Always start with login page on initial load
+  // Authentication state
   const [loggedIn, setLoggedIn] = useState(() => {
-    // Require both flag and token to consider the admin logged in
-    const flag = sessionStorage.getItem('adminLoggedIn') === 'true';
-    const token = sessionStorage.getItem('adminToken');
+    const flag = sessionStorage.getItem(STORAGE_KEYS.LOGGED_IN_FLAG) === 'true';
+    const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     return Boolean(flag && token);
   });
+
+  // UI state
   const [error, setError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Data state
   const [donors, setDonors] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loadingDonors, setLoadingDonors] = useState(false);
@@ -18,92 +24,115 @@ function App() {
   const [donorError, setDonorError] = useState('');
   const [patientError, setPatientError] = useState('');
 
-  const refreshDonors = () => {
+  const refreshDonors = useCallback(async () => {
     setLoadingDonors(true);
-    fetch('http://localhost:5000/api/donor/all', { cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch donor data');
-        return res.json();
-      })
-      .then(data => {
-        setDonors(Array.isArray(data) ? data : []);
-        setDonorError('');
-      })
-      .catch(() => {
-        setDonorError('Unable to fetch donor data. Please check backend.');
-      })
-      .finally(() => setLoadingDonors(false));
-  };
+    setDonorError('');
+    try {
+      const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        setDonorError('Session expired. Please log in again.');
+        setLoadingDonors(false);
+        return;
+      }
+      const data = await apiClient.get(API_CONFIG.ENDPOINTS.DONOR_ALL);
+      setDonors(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : ERROR_MESSAGES.FETCH_DONOR_FAILED;
+      setDonorError(message);
+      console.error('Donor fetch error:', err);
+    } finally {
+      setLoadingDonors(false);
+    }
+  }, []);
 
-  const refreshPatients = () => {
+  const refreshPatients = useCallback(async () => {
     setLoadingPatients(true);
-    fetch('http://localhost:5000/api/patient/all', { cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch patient data');
-        return res.json();
-      })
-      .then(data => {
-        setPatients(Array.isArray(data) ? data : []);
-        setPatientError('');
-      })
-      .catch(() => {
-        setPatientError('Unable to fetch patient data. Please check backend.');
-      })
-      .finally(() => setLoadingPatients(false));
-  };
+    setPatientError('');
+    try {
+      const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) {
+        setPatientError('Session expired. Please log in again.');
+        setLoadingPatients(false);
+        return;
+      }
+      const data = await apiClient.get(API_CONFIG.ENDPOINTS.PATIENT_ALL);
+      setPatients(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : ERROR_MESSAGES.FETCH_PATIENT_FAILED;
+      setPatientError(message);
+      console.error('Patient fetch error:', err);
+    } finally {
+      setLoadingPatients(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (loggedIn) {
       // Guard: if token is missing or empty, force logout
-      const token = sessionStorage.getItem('adminToken');
+      const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) {
         setLoggedIn(false);
         return;
       }
-      sessionStorage.setItem('adminLoggedIn', 'true');
+      sessionStorage.setItem(STORAGE_KEYS.LOGGED_IN_FLAG, 'true');
       refreshDonors();
       refreshPatients();
     } else {
-      sessionStorage.removeItem('adminLoggedIn');
-      // Do not remove token automatically to let user retry; only clear on explicit logout in future
+      sessionStorage.removeItem(STORAGE_KEYS.LOGGED_IN_FLAG);
     }
-  }, [loggedIn]);
+  }, [loggedIn, refreshDonors, refreshPatients]);
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = useCallback(async (email, password) => {
     setError('');
+    if (!email?.trim() || !password?.trim()) {
+      setError('Email and password are required');
+      return;
+    }
+    setIsLoggingIn(true);
     try {
-      const res = await fetch('http://localhost:5001/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setLoggedIn(true);
-        sessionStorage.setItem('adminLoggedIn', 'true');
+      const data = await apiClient.post(
+        API_CONFIG.ENDPOINTS.ADMIN_LOGIN,
+        { email, password },
+        { baseUrl: API_CONFIG.ADMIN_API_URL }
+      );
+      
+      if (data.success || data.token) {
         if (data.token) {
-          sessionStorage.setItem('adminToken', data.token);
+          sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
         }
+        sessionStorage.setItem(STORAGE_KEYS.LOGGED_IN_FLAG, 'true');
+        setLoggedIn(true);
       } else {
-        setError(data.message || 'Login failed');
+        setError(data.message || ERROR_MESSAGES.LOGIN_FAILED);
       }
     } catch (err) {
-      setError('Server error');
+      const message = err instanceof ApiError 
+        ? err.message 
+        : ERROR_MESSAGES.SERVER_ERROR;
+      setError(message);
+    } finally {
+      setIsLoggingIn(false);
     }
-  };
+  }, []);
 
-  return loggedIn
-    ? <Dashboard
-        donors={donors}
-        patients={patients}
-        loadingDonors={loadingDonors}
-        loadingPatients={loadingPatients}
-        donorError={donorError}
-        patientError={patientError}
-        onRefreshDonors={refreshDonors}
-        onRefreshPatients={refreshPatients}
-      />
-    : <LoginPage onLogin={handleLogin} error={error} />;
+  return loggedIn ? (
+    <Dashboard
+      donors={donors}
+      patients={patients}
+      loadingDonors={loadingDonors}
+      loadingPatients={loadingPatients}
+      donorError={donorError}
+      patientError={patientError}
+      onRefreshDonors={refreshDonors}
+      onRefreshPatients={refreshPatients}
+    />
+  ) : (
+    <LoginPage
+      onLogin={handleLogin}
+      error={error}
+      isLoading={isLoggingIn}
+    />
+  );
 }
 
 export default App;

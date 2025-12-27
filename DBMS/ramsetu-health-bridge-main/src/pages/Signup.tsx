@@ -11,6 +11,19 @@ import { useToast } from "@/hooks/use-toast";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+interface PasswordStrength {
+  score: number;
+  strength: "weak" | "fair" | "good" | "strong";
+  requirements: {
+    minLength: boolean;
+    uppercase: boolean;
+    lowercase: boolean;
+    number: boolean;
+    special: boolean;
+  };
+  missing: string[];
+}
+
 const Signup = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -27,22 +40,49 @@ const Signup = () => {
   const [passwordValue, setPasswordValue] = useState("");
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
+
+  // Check password strength in real-time
+  const checkPasswordStrength = async (password: string) => {
+    if (!password) {
+      setPasswordStrength(null);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/auth/check-password-strength`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      setPasswordStrength(data);
+    } catch (err) {
+      console.error("Failed to check password strength:", err);
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pwd = e.target.value;
+    setPasswordValue(pwd);
+    checkPasswordStrength(pwd);
+  };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     const fd = new FormData(e.currentTarget);
+    const name = fd.get("name");
     const email = fd.get("email");
     const password = fd.get("password");
     setPasswordValue(password as string); // Store password in state
-    setFormData({ email, role }); // Do not store password in formData
+    setFormData({ email, name, role }); // Include name in formData
     setEmailForOtp(email as string);
     try {
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password, role, name }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -135,8 +175,19 @@ const Signup = () => {
                     </Button>
                   </div>
                 </div>
-                {/* Email and Password */}
+                {/* Name, Email and Password */}
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="Full Name"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -159,7 +210,7 @@ const Signup = () => {
                         required
                         disabled={loading}
                         value={passwordValue}
-                        onChange={e => setPasswordValue(e.target.value)}
+                        onChange={handlePasswordChange}
                         className="pr-10"
                       />
                       <button
@@ -172,6 +223,55 @@ const Signup = () => {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    {/* Password Strength Indicator */}
+                    {passwordStrength && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-600">Strength:</span>
+                          <div className="flex gap-1 flex-1">
+                            {[0, 1, 2, 3, 4].map((i) => (
+                              <div
+                                key={i}
+                                className={`h-1 flex-1 rounded-full transition-colors ${
+                                  i < (passwordStrength.score / 20)
+                                    ? passwordStrength.strength === "strong"
+                                      ? "bg-green-500"
+                                      : passwordStrength.strength === "good"
+                                      ? "bg-blue-500"
+                                      : passwordStrength.strength === "fair"
+                                      ? "bg-yellow-500"
+                                      : "bg-red-500"
+                                    : "bg-gray-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                              passwordStrength.strength === "strong"
+                                ? "text-green-700 bg-green-100"
+                                : passwordStrength.strength === "good"
+                                ? "text-blue-700 bg-blue-100"
+                                : passwordStrength.strength === "fair"
+                                ? "text-yellow-700 bg-yellow-100"
+                                : "text-red-700 bg-red-100"
+                            }`}
+                          >
+                            {passwordStrength.strength.toUpperCase()}
+                          </span>
+                        </div>
+                        {passwordStrength.missing.length > 0 && (
+                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                            <p className="font-medium mb-1">Missing:</p>
+                            <ul className="list-disc list-inside space-y-0.5">
+                              {passwordStrength.missing.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button type="submit" className="w-full mt-6" disabled={loading}>

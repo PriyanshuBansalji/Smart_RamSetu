@@ -19,14 +19,6 @@ const KidneyDonationForm = () => {
     urine: "",
     imaging: "",
     cardiac: "",
-    bloodGroupFile: null,
-    hlaFile: null,
-    renalFunctionFile: null,
-    viralMarkersFile: null,
-    cbcFile: null,
-    urineFile: null,
-    imagingFile: null,
-    cardiacFile: null,
     consent: false,
   });
 
@@ -68,10 +60,10 @@ const KidneyDonationForm = () => {
   }, []);
 
   const handleChange = (e: any) => {
-    const { name, value, type, files, checked } = e.target;
+    const { name, value, type, checked } = e.target;
     setFields((prev) => ({
       ...prev,
-      [name]: type === "file" ? files[0] : type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -90,7 +82,6 @@ const KidneyDonationForm = () => {
       }
       // Debug: log token for troubleshooting
       console.log("Submitting with token:", token);
-      const formData = new FormData();
       const tests = [
         { label: "Blood group + Rh typing", value: fields.bloodGroup },
         { label: "HLA matching", value: fields.hla },
@@ -101,22 +92,14 @@ const KidneyDonationForm = () => {
         { label: "Imaging", value: fields.imaging },
         { label: "Cardiac evaluation", value: fields.cardiac },
       ];
-      formData.append("tests", JSON.stringify(tests));
-      if (fields.bloodGroupFile) formData.append("files", fields.bloodGroupFile);
-      if (fields.hlaFile) formData.append("files", fields.hlaFile);
-      if (fields.renalFunctionFile) formData.append("files", fields.renalFunctionFile);
-      if (fields.viralMarkersFile) formData.append("files", fields.viralMarkersFile);
-      if (fields.cbcFile) formData.append("files", fields.cbcFile);
-      if (fields.urineFile) formData.append("files", fields.urineFile);
-      if (fields.imagingFile) formData.append("files", fields.imagingFile);
-      if (fields.cardiacFile) formData.append("files", fields.cardiacFile);
-      formData.append("consent", fields.consent ? "true" : "false");
+      const body = JSON.stringify({ tests, consent: fields.consent });
       const res = await fetch(`${API_URL}/donation-request/Kidney`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body,
       });
       console.log("Form submit response status:", res.status); // <--- DEBUG
       if (!res.ok) {
@@ -221,43 +204,35 @@ const KidneyDonationForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="font-semibold">Blood group + Rh typing</label>
-                <Input name="bloodGroup" value={fields.bloodGroup} onChange={handleChange} placeholder="Enter result" />
-                <Input name="bloodGroupFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="bloodGroup" value={fields.bloodGroup} onChange={handleChange} placeholder="e.g. A+, B-, O+" />
               </div>
               <div>
                 <label className="font-semibold">HLA matching</label>
-                <Input name="hla" value={fields.hla} onChange={handleChange} placeholder="Enter result" />
-                <Input name="hlaFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="hla" value={fields.hla} onChange={handleChange} placeholder="e.g. A2, B7, DR15" />
               </div>
               <div>
                 <label className="font-semibold">Renal function tests</label>
-                <Input name="renalFunction" value={fields.renalFunction} onChange={handleChange} placeholder="Enter result" />
-                <Input name="renalFunctionFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="renalFunction" value={fields.renalFunction} onChange={handleChange} placeholder="e.g. Creatinine: 1.2 mg/dL, Urea: 30 mg/dL, GFR: 90 mL/min" />
               </div>
               <div>
                 <label className="font-semibold">Viral markers: HIV, Hepatitis B, Hepatitis C etc.</label>
-                <Input name="viralMarkers" value={fields.viralMarkers} onChange={handleChange} placeholder="Enter result" />
-                <Input name="viralMarkersFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="viralMarkers" value={fields.viralMarkers} onChange={handleChange} placeholder="e.g. HIV: Negative, HBsAg: Negative, HCV: Negative" />
               </div>
               <div>
                 <label className="font-semibold">Complete blood count, liver function tests, electrolytes</label>
-                <Input name="cbc" value={fields.cbc} onChange={handleChange} placeholder="Enter result" />
-                <Input name="cbcFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="cbc" value={fields.cbc} onChange={handleChange} placeholder="e.g. Hemoglobin: 13, WBC: 6000, Platelets: 250000, ALT: 25, AST: 22, Sodium: 140, Potassium: 4.2" />
               </div>
               <div>
                 <label className="font-semibold">Urine tests (protein, infection etc.)</label>
-                <Input name="urine" value={fields.urine} onChange={handleChange} placeholder="Enter result" />
-                <Input name="urineFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="urine" value={fields.urine} onChange={handleChange} placeholder="e.g. Protein: Negative, Microscopy: Normal, Infection: None" />
               </div>
               <div>
                 <label className="font-semibold">Imaging (Kidney ultrasound etc.)</label>
-                <Input name="imaging" value={fields.imaging} onChange={handleChange} placeholder="Enter result" />
-                <Input name="imagingFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="imaging" value={fields.imaging} onChange={handleChange} placeholder="e.g. Ultrasound: Normal kidney size and echotexture" />
               </div>
               <div>
                 <label className="font-semibold">Cardiac evaluation (if risk)</label>
-                <Input name="cardiac" value={fields.cardiac} onChange={handleChange} placeholder="Enter result" />
-                <Input name="cardiacFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="cardiac" value={fields.cardiac} onChange={handleChange} placeholder="e.g. ECG: Normal, Echo: LVEF 60%" />
               </div>
             </div>
             <div className="flex items-center gap-2 mt-6">

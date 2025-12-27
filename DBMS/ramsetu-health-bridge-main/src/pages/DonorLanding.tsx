@@ -264,6 +264,22 @@ const DonorLanding: React.FC = () => {
 	const [email, setEmail] = useState<string>("");
 	const navigate = useNavigate();
 
+	// Benefits and How It Works data
+	const benefits = [
+		{ icon: "🛡️", title: "Secure & Verified", desc: "Your data is encrypted and all documents are securely stored" },
+		{ icon: "⚡", title: "Quick Process", desc: "Fast screening and eligibility verification by experts" },
+		{ icon: "📱", title: "Easy Forms", desc: "Simple step-by-step forms with clear medical guidance" },
+		{ icon: "👥", title: "Expert Team", desc: "Medical professionals guide you throughout the process" },
+	];
+
+	const howItWorks = [
+		{ step: "1", title: "Register", desc: "Create your secure account with RamSetu" },
+		{ step: "2", title: "Select Organ", desc: "Choose which organ you want to donate" },
+		{ step: "3", title: "Fill Form", desc: "Complete the medical assessment form" },
+		{ step: "4", title: "Get Verified", desc: "Our team verifies your eligibility" },
+		{ step: "5", title: "Match Found", desc: "Get matched with patients in need" },
+	];
+
 	useEffect(() => {
 		fetchEmailAndRequests(setEmail, setRequests, setLoading, setError, navigate);
 		const handler = () => {
@@ -301,10 +317,10 @@ const DonorLanding: React.FC = () => {
 		// estimate lives impacted: verified * 8 (keep previous messaging)
 		const livesImpacted = verified > 0 ? `${verified * 8}+` : "—";
 		return [
-			{ title: "Lives impacted", value: livesImpacted, subtitle: "Estimated (verified)" },
-			{ title: "Verified matches", value: `${verified}`, subtitle: `${total} total submissions` },
-			{ title: "Pending", value: `${pending}`, subtitle: "Awaiting verification" },
-			{ title: "Support", value: "24/7", subtitle: "Guidance & help" },
+			{ title: "Lives impacted", value: livesImpacted, subtitle: "Estimated (verified)", icon: "❤️" },
+			{ title: "Verified matches", value: `${verified}`, subtitle: `${total} total submissions`, icon: "✅" },
+			{ title: "Pending", value: `${pending}`, subtitle: "Awaiting verification", icon: "⏳" },
+			{ title: "Support", value: "24/7", subtitle: "Guidance & help", icon: "🤝" },
 		];
 	}, [requests]);
 
@@ -325,12 +341,14 @@ const DonorLanding: React.FC = () => {
 		{ q: "Who can donate?", a: "Healthy adults after screening can donate. Follow the form guidance." },
 		{ q: "Is my data safe?", a: "Yes — RamSetu uses secure storage and restricted access." },
 		{ q: "How long does verification take?", a: "Verification typically takes 3–7 days depending on required tests." },
+		{ q: "Can I donate multiple organs?", a: "Yes! You can submit forms for different organs at different times." },
 	];
 
 	const testimonials = [
-		{ id: "t1", name: "Asha K.", text: "Easy and compassionate process — grateful to donate.", role: "Donor" },
-		{ id: "t2", name: "Ravi P.", text: "RamSetu handled everything with care.", role: "Donor" },
-		{ id: "t3", name: "Neha S.", text: "Support team was helpful during the whole process.", role: "Donor" },
+		{ id: "t1", name: "Asha K.", text: "Easy and compassionate process — grateful to donate.", role: "Donor", location: "Mumbai" },
+		{ id: "t2", name: "Ravi P.", text: "RamSetu handled everything with care.", role: "Donor", location: "Delhi" },
+		{ id: "t3", name: "Neha S.", text: "Support team was helpful during the whole process.", role: "Donor", location: "Bangalore" },
+		{ id: "t4", name: "Vikram M.", text: "Proud to be part of this life-saving mission.", role: "Donor", location: "Hyderabad" },
 	];
 
 	// Add logout handler
@@ -354,11 +372,11 @@ const DonorLanding: React.FC = () => {
 					<div className="relative z-10 max-w-7xl mx-auto py-8 lg:py-12">
 												<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 														<div className="lg:col-span-4 flex flex-col items-center lg:items-start">
-																<div className="bg-white rounded-full p-6 shadow-2xl flex items-center justify-center">
+																<div className="bg-white rounded-full p-6 shadow-2xl flex items-center justify-center animate-bounce">
 																		<img src="/logo.png" alt="RamSetu Logo" className="w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 object-cover rounded-full" />
 																</div>
 																{/* Awareness video */}
-																<div className="mt-4 w-full max-w-md bg-white/90 rounded-2xl shadow-2xl overflow-hidden">
+																<div className="mt-4 w-full max-w-md bg-white/90 rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300">
 																	{(() => {
 																		const embed = toYouTubeEmbed(DONOR_VIDEO_URL);
 																		if (embed) {
@@ -392,33 +410,36 @@ const DonorLanding: React.FC = () => {
 
 							<div className="lg:col-span-5 text-center lg:text-left">
 								<div className="flex-1 min-w-0">
-									<h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-white drop-shadow-lg">
+									<h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-white drop-shadow-lg animate-fade-in">
 										Make a life‑saving decision today
 									</h1>
 									<p className="mt-3 text-sm sm:text-base text-blue-100/90 max-w-2xl">
 										RamSetu connects willing donors to patients in need — secure, verified, and compassionate. Start a donation assessment or view your current requests.
 									</p>
 
-									<div className="mt-4 flex flex-wrap gap-3">
-										<Link to="/donate/kidney" className="inline-flex items-center justify-center rounded-xl bg-white text-blue-800 font-semibold px-4 py-2 shadow hover:shadow-lg transition">
-											Start Donation
+									<div className="mt-6 flex flex-wrap gap-3">
+										<Link to="/donate/kidney" className="inline-flex items-center justify-center rounded-xl bg-white text-blue-800 font-semibold px-6 py-3 shadow-lg hover:shadow-xl hover:scale-105 transition transform">
+											🚀 Start Donation
 										</Link>
-										<a href="/About" className="inline-flex items-center justify-center rounded-xl border border-white/30 text-white px-4 py-2 font-medium hover:bg-white/10 transition">
-											Learn why donate
+										<a href="/About" className="inline-flex items-center justify-center rounded-xl border-2 border-white text-white px-6 py-3 font-semibold hover:bg-white/10 transition">
+											📚 Learn why donate
 										</a>
 									</div>
 								</div>
 							</div>
 
 							<div className="lg:col-span-3 flex justify-center lg:justify-end">
-								<div className="bg-white rounded-2xl text-blue-800 shadow-lg p-4 w-64">
-									<div className="font-semibold mb-2">Quick actions</div>
-									<ul className="space-y-2 text-sm">
-										<li><Link to="/donate/kidney" className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50"><span>🟢</span> Kidney form</Link></li>
-										<li><Link to="/donate/liver" className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50"><span>🟠</span> Liver form</Link></li>
-										<li><Link to="/donate/heart" className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50"><span>❤️</span> Heart form</Link></li>
-										<li><Link to="/donate/cornea" className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50"><span>👁️</span> Cornea form</Link></li>
+								<div className="bg-white rounded-2xl text-blue-800 shadow-lg p-6 w-72 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+									<div className="font-extrabold mb-3 text-lg">⚡ Quick actions</div>
+									<ul className="space-y-2">
+										<li><Link to="/donate/kidney" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition font-medium"><span className="text-xl">🟢</span> Kidney form</Link></li>
+										<li><Link to="/donate/liver" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition font-medium"><span className="text-xl">🟠</span> Liver form</Link></li>
+										<li><Link to="/donate/heart" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition font-medium"><span className="text-xl">❤️</span> Heart form</Link></li>
+										<li><Link to="/donate/cornea" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-50 transition font-medium"><span className="text-xl">👁️</span> Cornea form</Link></li>
 									</ul>
+									<div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
+										✨ Choose your organ and fill the form in minutes
+									</div>
 								</div>
 							</div>
 						</div>
@@ -426,8 +447,83 @@ const DonorLanding: React.FC = () => {
 				</div>
 			</section>
 
+			{/* BENEFITS SECTION */}
+			<section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+				<div className="max-w-6xl mx-auto">
+					<h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">Why Choose RamSetu?</h2>
+					<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+						{benefits.map((b, i) => (
+							<div key={i} className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+								<div className="relative h-32 mb-4 rounded-xl bg-gradient-to-br from-blue-200 to-green-200 flex items-center justify-center overflow-hidden">
+									<div className="text-6xl group-hover:scale-110 transition-transform duration-300">{b.icon}</div>
+								</div>
+								<h3 className="font-bold text-lg text-gray-900 mb-2">{b.title}</h3>
+								<p className="text-sm text-gray-600">{b.desc}</p>
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			{/* HOW IT WORKS */}
+			<section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-500 to-green-500 relative overflow-hidden">
+				<div className="absolute inset-0 opacity-10"><img src="/placeholder.svg" alt="" className="w-full h-full object-cover" /></div>
+				<div className="max-w-6xl mx-auto relative z-10">
+					<h2 className="text-3xl font-extrabold text-center text-white mb-12">How It Works</h2>
+					<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+						{howItWorks.map((item, i) => (
+							<div key={i} className="relative">
+								<div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+									<div className="h-24 bg-gradient-to-r from-blue-300 to-green-300 flex items-center justify-center text-4xl font-bold">
+										{['📋', '🔍', '✏️', '✅', '❤️'][i]}
+									</div>
+									<div className="p-4 text-center">
+										<div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white font-bold mb-2 text-sm">{item.step}</div>
+										<h4 className="font-bold text-gray-900 mb-2 text-sm">{item.title}</h4>
+										<p className="text-xs text-gray-600">{item.desc}</p>
+									</div>
+								</div>
+								{i < howItWorks.length - 1 && (
+									<div className="hidden md:block absolute top-1/3 -right-2 w-4 h-1 bg-white/50"></div>
+								)}
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			{/* IMPACT STATISTICS */}
+			<section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
+				<div className="absolute inset-0 opacity-5"></div>
+				<div className="max-w-6xl mx-auto relative z-10">
+					<h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">💪 Our Impact</h2>
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+						<div className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition transform hover:scale-105">
+							<div className="text-5xl mb-2">❤️</div>
+							<div className="text-4xl font-bold text-blue-600">50K+</div>
+							<div className="text-sm text-gray-600 mt-2">Lives Saved</div>
+						</div>
+						<div className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition transform hover:scale-105">
+							<div className="text-5xl mb-2">🟢</div>
+							<div className="text-4xl font-bold text-green-600">15K+</div>
+							<div className="text-sm text-gray-600 mt-2">Active Donors</div>
+						</div>
+						<div className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition transform hover:scale-105">
+							<div className="text-5xl mb-2">🏥</div>
+							<div className="text-4xl font-bold text-orange-600">25K+</div>
+							<div className="text-sm text-gray-600 mt-2">Successful Matches</div>
+						</div>
+						<div className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition transform hover:scale-105">
+							<div className="text-5xl mb-2">🏛️</div>
+							<div className="text-4xl font-bold text-purple-600">500+</div>
+							<div className="text-sm text-gray-600 mt-2">Partner Hospitals</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
 			{/* MAIN */}
-			<main className="flex-1 py-8 px-4 max-w-6xl mx-auto">
+			<main className="flex-1 py-12 px-4 max-w-6xl mx-auto w-full">
 				<div className="mb-8 flex items-center justify-between">
 					<h1 className="text-3xl font-extrabold text-blue-900">Organ Donations Dashboard</h1>
 				</div>
@@ -545,40 +641,83 @@ const DonorLanding: React.FC = () => {
 				{/* FAQ & Testimonials */}
 				<div className="grid md:grid-cols-2 gap-6 mb-12">
 					<div className="bg-white rounded-2xl p-6 shadow">
-						<h3 className="text-lg font-bold mb-4">Frequently asked questions</h3>
+						<h3 className="text-lg font-bold mb-4">❓ Frequently Asked Questions</h3>
 						<div className="space-y-3 text-sm">
 							{faqs.map((f, i) => (
-								<details key={i} className="bg-gray-50 rounded-lg p-3">
-									<summary className="font-semibold cursor-pointer">{f.q}</summary>
-									<div className="mt-2 text-gray-700">{f.a}</div>
+								<details key={i} className="group bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-blue-100 hover:border-blue-300 transition cursor-pointer">
+									<summary className="font-semibold cursor-pointer flex items-center justify-between">
+										<span>{f.q}</span>
+										<span className="group-open:rotate-180 transition-transform">▼</span>
+									</summary>
+									<div className="mt-3 text-gray-700 leading-relaxed border-t border-blue-200 pt-3">{f.a}</div>
 								</details>
 							))}
 						</div>
 					</div>
 
 					<div className="bg-white rounded-2xl p-6 shadow">
-						<h3 className="text-lg font-bold mb-4">Donor stories</h3>
+						<h3 className="text-lg font-bold mb-4">✨ Donor Stories</h3>
 						<div className="space-y-4">
-							{testimonials.map((t) => (
-								<div key={t.id} className="p-3 border rounded">
-									<div className="font-semibold">{t.name} <span className="text-xs text-gray-500">— {t.role}</span></div>
-									<div className="text-sm text-gray-700 mt-1">{t.text}</div>
+						{testimonials.map((t, idx) => (
+							<div key={t.id} className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border border-blue-100 hover:shadow-lg transition">
+								<div className="flex items-start gap-3">
+									<img 
+										src={`https://i.pravatar.cc/48?img=${idx}`}
+										alt={t.name}
+										className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+									/>
+									<div className="flex-1">
+										<div className="flex items-center justify-between">
+											<div>
+												<div className="font-semibold text-gray-900">{t.name}</div>
+												<div className="text-xs text-gray-500 mt-1">📍 {t.location} • {t.role}</div>
+											</div>
+											<div className="text-2xl">⭐</div>
+										</div>
+									</div>
+									</div>
+									<div className="text-sm text-gray-700 mt-2 italic">"{t.text}"</div>
 								</div>
 							))}
 						</div>
 					</div>
 				</div>
 
-				{/* CTA */}
-				<section className="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-2xl p-8 shadow-lg mb-12">
-					<div className="flex flex-col md:flex-row items-center justify-between gap-4">
-						<div>
-							<h3 className="text-2xl font-extrabold">Ready to save lives?</h3>
-							<p className="mt-2 text-sm">Start your donation form or visit your dashboard to view request status.</p>
+				{/* Trust & Safety Section */}
+			<section className="bg-gradient-to-r from-white to-blue-50 rounded-2xl p-8 shadow-lg mb-12 border border-blue-100">
+				<h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">🔒 Trust & Safety</h2>
+				<div className="grid md:grid-cols-3 gap-6">
+					<div className="text-center">
+						<div className="h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mb-3 text-6xl">🛡️</div>
+						<h4 className="font-bold text-lg text-gray-900 mb-2">Data Protection</h4>
+						<p className="text-gray-600">All your medical information is encrypted and securely stored with government-grade security.</p>
+					</div>
+					<div className="text-center">
+						<div className="h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-3 text-6xl">✅</div>
+						<h4 className="font-bold text-lg text-gray-900 mb-2">Verified Screening</h4>
+						<p className="text-gray-600">Every donor goes through rigorous medical screening by certified healthcare professionals.</p>
+					</div>
+					<div className="text-center">
+						<div className="h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mb-3 text-6xl">📋</div>
+							<p className="text-gray-600">Track your donation status in real-time and stay informed at every step of the journey.</p>
 						</div>
-						<div className="flex gap-3">
-							<Link to="/donor-dashboard" className="inline-block rounded-xl border border-white/30 text-white px-6 py-3 hover:bg-white/10">Go to Dashboard</Link>
-							<Link to="/donate/kidney" className="inline-block rounded-xl bg-white text-blue-700 px-6 py-3 font-semibold">Choose Organ</Link>
+					</div>
+				</section>
+
+				{/* CTA */}
+			<section className="bg-gradient-to-r from-green-500 via-blue-600 to-blue-700 text-white rounded-2xl p-8 shadow-2xl mb-12 transform hover:scale-105 transition">
+				<div className="flex flex-col md:flex-row items-center justify-between gap-6">
+					<div className="flex-1">
+						<h3 className="text-3xl font-extrabold">🎯 Ready to Save Lives?</h3>
+						<p className="mt-3 text-lg text-blue-100">Start your donation assessment today and join our community of life-saving donors.</p>
+					</div>
+					<div className="flex flex-col sm:flex-row gap-3 whitespace-nowrap">
+						<Link to="/donor-dashboard" className="inline-flex items-center justify-center rounded-xl border-2 border-white text-white px-6 py-3 hover:bg-white/10 transition font-semibold">
+							📊 Dashboard
+						</Link>
+						<Link to="/donate/kidney" className="inline-flex items-center justify-center rounded-xl bg-white text-blue-700 px-6 py-3 hover:bg-blue-50 transition font-bold shadow-lg">
+							🚀 Start Now
+						</Link>
 						</div>
 					</div>
 				</section>

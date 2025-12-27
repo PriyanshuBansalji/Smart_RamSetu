@@ -17,12 +17,6 @@ const HeartDonationForm = () => {
     angiography: "",
     chestImaging: "",
     generalHealth: "",
-    bloodGroupFile: null,
-    viralMarkersFile: null,
-    echoFile: null,
-    angiographyFile: null,
-    chestImagingFile: null,
-    generalHealthFile: null,
     consent: false,
   });
 
@@ -64,10 +58,10 @@ const HeartDonationForm = () => {
   }, []);
 
   const handleChange = (e: any) => {
-    const { name, value, type, files, checked } = e.target;
+    const { name, value, type, checked } = e.target;
     setFields((prev) => ({
       ...prev,
-      [name]: type === "file" ? files[0] : type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -85,7 +79,6 @@ const HeartDonationForm = () => {
       }
       // Debug: log token for troubleshooting
       console.log("Submitting with token:", token);
-      const formData = new FormData();
       const tests = [
         { label: "Blood group", value: fields.bloodGroup },
         { label: "Viral markers", value: fields.viralMarkers },
@@ -94,20 +87,14 @@ const HeartDonationForm = () => {
         { label: "Chest imaging", value: fields.chestImaging },
         { label: "General health", value: fields.generalHealth },
       ];
-      formData.append("tests", JSON.stringify(tests));
-      if (fields.bloodGroupFile) formData.append("files", fields.bloodGroupFile);
-      if (fields.viralMarkersFile) formData.append("files", fields.viralMarkersFile);
-      if (fields.echoFile) formData.append("files", fields.echoFile);
-      if (fields.angiographyFile) formData.append("files", fields.angiographyFile);
-      if (fields.chestImagingFile) formData.append("files", fields.chestImagingFile);
-      if (fields.generalHealthFile) formData.append("files", fields.generalHealthFile);
-      formData.append("consent", fields.consent ? "true" : "false");
+      const body = JSON.stringify({ tests, consent: fields.consent });
       const res = await fetch(`${API_URL}/donation-request/Heart`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body,
       });
       if (!res.ok) {
         if (res.status === 401) {
@@ -186,33 +173,27 @@ const HeartDonationForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="font-semibold">Blood group</label>
-                <Input name="bloodGroup" value={fields.bloodGroup} onChange={handleChange} placeholder="Enter result" />
-                <Input name="bloodGroupFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="bloodGroup" value={fields.bloodGroup} onChange={handleChange} placeholder="e.g. A+, B-, O+" />
               </div>
               <div>
                 <label className="font-semibold">Viral markers</label>
-                <Input name="viralMarkers" value={fields.viralMarkers} onChange={handleChange} placeholder="Enter result" />
-                <Input name="viralMarkersFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="viralMarkers" value={fields.viralMarkers} onChange={handleChange} placeholder="e.g. HIV: Negative, HBsAg: Negative, HCV: Negative" />
               </div>
               <div>
                 <label className="font-semibold">Echocardiography</label>
-                <Input name="echo" value={fields.echo} onChange={handleChange} placeholder="Enter result" />
-                <Input name="echoFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="echo" value={fields.echo} onChange={handleChange} placeholder="e.g. LVEF: 60%, No wall motion abnormality" />
               </div>
               <div>
                 <label className="font-semibold">Angiography</label>
-                <Input name="angiography" value={fields.angiography} onChange={handleChange} placeholder="Enter result" />
-                <Input name="angiographyFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="angiography" value={fields.angiography} onChange={handleChange} placeholder="e.g. No significant coronary artery disease" />
               </div>
               <div>
                 <label className="font-semibold">Chest imaging</label>
-                <Input name="chestImaging" value={fields.chestImaging} onChange={handleChange} placeholder="Enter result" />
-                <Input name="chestImagingFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="chestImaging" value={fields.chestImaging} onChange={handleChange} placeholder="e.g. Chest X-ray: Normal, CT: No abnormality" />
               </div>
               <div>
                 <label className="font-semibold">General health</label>
-                <Input name="generalHealth" value={fields.generalHealth} onChange={handleChange} placeholder="Enter result" />
-                <Input name="generalHealthFile" type="file" onChange={handleChange} className="mt-2" />
+                <Input name="generalHealth" value={fields.generalHealth} onChange={handleChange} placeholder="e.g. No comorbidities, physically active" />
               </div>
             </div>
             <div className="flex items-center gap-2 mt-6">

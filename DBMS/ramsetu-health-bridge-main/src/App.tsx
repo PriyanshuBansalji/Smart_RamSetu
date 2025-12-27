@@ -23,6 +23,7 @@ import LiverDonationForm from "./pages/LiverDonationForm";
 import HeartDonationForm from "./pages/HeartDonationForm";
 import CorneaDonationForm from "./pages/CorneaDonationForm";
 import UploadDocuments from "./pages/UploadDocuments";
+import CommonDonationForm from "./pages/CommonDonationForm";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/donate/heart" element={<HeartDonationForm />} />
           <Route path="/donate/cornea" element={<CorneaDonationForm />} />
           <Route path="/upload-documents" element={<UploadDocuments />} />
+          <Route path="/common-donation-form" element={<CommonDonationForm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

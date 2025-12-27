@@ -15,10 +15,6 @@ const CorneaDonationForm = () => {
     eyeHealth: "",
     serology: "",
     causeOfDeath: "",
-    infectionTestFile: null,
-    eyeHealthFile: null,
-    serologyFile: null,
-    causeOfDeathFile: null,
     consent: false,
   });
 
@@ -60,10 +56,10 @@ const CorneaDonationForm = () => {
   }, []);
 
   const handleChange = (e: any) => {
-    const { name, value, type, files, checked } = e.target;
+    const { name, value, type, checked } = e.target;
     setFields((prev) => ({
       ...prev,
-      [name]: type === "file" ? files[0] : type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -81,25 +77,20 @@ const CorneaDonationForm = () => {
       }
       // Debug: log token for troubleshooting
       console.log("Submitting with token:", token);
-      const formData = new FormData();
       const tests = [
         { label: "Test for infections", value: fields.infectionTest },
         { label: "Eye health", value: fields.eyeHealth },
         { label: "Serology", value: fields.serology },
         { label: "Cause of death", value: fields.causeOfDeath },
       ];
-      formData.append("tests", JSON.stringify(tests));
-      if (fields.infectionTestFile) formData.append("files", fields.infectionTestFile);
-      if (fields.eyeHealthFile) formData.append("files", fields.eyeHealthFile);
-      if (fields.serologyFile) formData.append("files", fields.serologyFile);
-      if (fields.causeOfDeathFile) formData.append("files", fields.causeOfDeathFile);
-      formData.append("consent", fields.consent ? "true" : "false");
+      const body = JSON.stringify({ tests, consent: fields.consent });
       const res = await fetch(`${API_URL}/donation-request/Cornea`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body,
       });
       if (!res.ok) {
         if (res.status === 401) {
@@ -197,22 +188,18 @@ const CorneaDonationForm = () => {
               <div>
                 <label className="font-semibold">Test for infections</label>
                 <Input name="infectionTest" value={fields.infectionTest} onChange={handleChange} placeholder="Enter result" />
-                <Input name="infectionTestFile" type="file" onChange={handleChange} className="mt-2" />
               </div>
               <div>
                 <label className="font-semibold">Eye health</label>
                 <Input name="eyeHealth" value={fields.eyeHealth} onChange={handleChange} placeholder="Enter result" />
-                <Input name="eyeHealthFile" type="file" onChange={handleChange} className="mt-2" />
               </div>
               <div>
                 <label className="font-semibold">Serology</label>
                 <Input name="serology" value={fields.serology} onChange={handleChange} placeholder="Enter result" />
-                <Input name="serologyFile" type="file" onChange={handleChange} className="mt-2" />
               </div>
               <div>
                 <label className="font-semibold">Cause of death</label>
                 <Input name="causeOfDeath" value={fields.causeOfDeath} onChange={handleChange} placeholder="Enter result" />
-                <Input name="causeOfDeathFile" type="file" onChange={handleChange} className="mt-2" />
               </div>
             </div>
             <div className="flex items-center gap-2 mt-6">

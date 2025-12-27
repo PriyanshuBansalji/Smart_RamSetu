@@ -68,15 +68,42 @@ const DonorMedicalForm = () => {
     return { ...initialState, email, regId };
   });
 
+  // Reverse geocode utility
+  async function reverseGeocode(lat: number, lon: number) {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  // Update address fields from coordinates
+  const updateAddressFields = async (lat: number, lon: number) => {
+    const data = await reverseGeocode(lat, lon);
+    if (data && data.address) {
+      setForm((prev) => ({
+        ...prev,
+        address: data.display_name || `${lat},${lon}`,
+        city: data.address.city || data.address.town || data.address.village || "",
+        state: data.address.state || "",
+        country: data.address.country || "",
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, address: `${lat},${lon}` }));
+    }
+  };
+
   // Get location from browser
   const handleGetLocation = () => {
     setLocating(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
           const { latitude, longitude } = pos.coords;
           setPosition([latitude, longitude]);
-          setForm((prev) => ({ ...prev, address: `${latitude},${longitude}` }));
+          await updateAddressFields(latitude, longitude);
           setLocating(false);
         },
         () => {
@@ -91,15 +118,37 @@ const DonorMedicalForm = () => {
   };
 
   // Update address when marker is dragged
-  const handleMarkerDragEnd = () => {
+  const handleMarkerDragEnd = async () => {
     const marker = markerRef.current;
     if (marker) {
       const latlng = marker.getLatLng();
       setPosition([latlng.lat, latlng.lng]);
-      setForm((prev) => ({ ...prev, address: `${latlng.lat},${latlng.lng}` }));
+      await updateAddressFields(latlng.lat, latlng.lng);
     }
   };
-  // Autofill email handler
+  // Autofill all related fields handler
+  const handleAutoFillAll = () => {
+    const user = localStorage.getItem("user");
+    if (!user) return;
+    try {
+      const u = JSON.parse(user);
+      setForm((prev) => ({
+        ...prev,
+        fullName: u.fullName || prev.fullName,
+        dob: u.dob || prev.dob,
+        gender: u.gender || prev.gender,
+        bloodGroup: u.bloodGroup || prev.bloodGroup,
+        address: u.address || prev.address,
+        city: u.city || prev.city,
+        state: u.state || prev.state,
+        country: u.country || prev.country,
+        contact: u.contact || prev.contact,
+        email: u.email || prev.email,
+        emergencyContact: u.emergencyContact || prev.emergencyContact,
+      }));
+    } catch {}
+  };
+  // Autofill email handler (kept for single field)
   const handleAutoFillEmail = () => {
     const user = localStorage.getItem("user");
     let email = "";
@@ -280,6 +329,7 @@ const DonorMedicalForm = () => {
                   <User className="text-blue-600 bg-blue-100 rounded-full p-1" size={24} />
                   <span className="font-semibold text-xl text-gray-900">Personal Information</span>
                   <Info className="ml-2 text-blue-400" size={18} />
+                  <Button type="button" size="sm" variant="outline" className="ml-4" onClick={handleAutoFillAll}>Auto-Fill All</Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-blue-50/80 p-6 rounded-2xl mb-2 border border-blue-200">
                   <div><Label>Full Name</Label><Input name="fullName" value={form.fullName} onChange={handleChange} required className="mt-1 focus:ring-2 focus:ring-blue-400 rounded-xl" /></div>
