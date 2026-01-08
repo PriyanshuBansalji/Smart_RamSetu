@@ -290,7 +290,7 @@ const DonorLanding: React.FC = () => {
 	}, []);
 
 	const blockedOrgans = requests
-		.filter((r) => ["Pending", "Verified"].includes(String(r.status)))
+		.filter((r) => ["Pending", "Verified","Donated"].includes(String(r.status)))
 		.map((r) => (r.organ || "").toLowerCase());
 
 	// derive stats + recent activity dynamically from requests

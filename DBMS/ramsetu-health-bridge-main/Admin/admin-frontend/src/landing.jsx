@@ -1,54 +1,44 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { 
+  SearchIcon, 
+  TrendingIcon, 
+  UserGroupIcon, 
+  HeartIcon,
+  RefreshIcon,
+  DownloadIcon,
+  CheckIcon,
+  CloseIcon
+} from './components/icons.jsx';
+import {
+  normalizeId,
+  formatDateTime,
+  formatDate,
+  calcAge,
+  getBloodGroupColor,
+  getStatusColor,
+  truncate,
+  toCSV,
+  downloadCSV
+} from './utils/dashboardHelpers.js';
+import StatCard from './components/StatCard.jsx';
+import Modal from './components/Modal.jsx';
+import Alert from './components/Alert.jsx';
+import SearchBar from './components/SearchBar.jsx';
+import LoadingSpinner from './components/LoadingSpinner.jsx';
 
-// Icons
-function SearchIcon({ className = '' }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" aria-hidden="true" focusable="false">
-      <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.11 12.12l4.26 4.26a.75.75 0 1 0 1.06-1.06l-4.26-4.26A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function TrendingIcon({ className = '' }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M2.75 12a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0ZM8.75 6.75a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0ZM15 2.75a1.25 1.25 0 1 0 2.5 0 1.25 1.25 0 0 0-2.5 0Z" />
-      <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M2 13v6m5.25-9.5L9.75 8m5.25-3.75L17 5.5" />
-    </svg>
-  );
-}
-
-function UserGroupIcon({ className = '' }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 1a5 5 0 1 0 0 10A5 5 0 0 0 12 1zm0 13c-5.33 0-8 2.67-8 8v2h16v-2c0-5.33-2.67-8-8-8z" />
-    </svg>
-  );
-}
-
-function HeartIcon({ className = '' }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  );
-}
-
-// Helpers
-const normalizeId = (val) => {
-  if (!val) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object') {
-    const cand = val._id || val.id || val.$oid || val.value || '';
-    if (cand) return String(cand);
-    try { return String(val); } catch { return ''; }
-  }
-  try { return String(val); } catch { return ''; }
-};
-const formatDateTime = (d) => { try { return d ? new Date(d).toLocaleString() : '—'; } catch { return String(d||'—'); } };
-const calcAge = (dob) => { try { const b=new Date(dob); if(isNaN(b)) return ''; return `${Math.floor((Date.now()-b)/31557600000)}y`; } catch { return '';} };
-
-function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorError, patientError, onRefreshDonors, onRefreshPatients }) {
+function Dashboard({ 
+  donors, 
+  patients, 
+  loadingDonors, 
+  loadingPatients, 
+  donorError, 
+  patientError, 
+  onRefreshDonors, 
+  onRefreshPatients,
+  onLogout
+}) {
+  // Tab state for better navigation
+  const [activeTab, setActiveTab] = useState('overview');
   // Settings
   const [apiBase, setApiBase] = useState(() => sessionStorage.getItem('apiBase') || 'http://localhost:5000');
   const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem('adminToken') || localStorage.getItem('adminToken') || '');
@@ -87,6 +77,17 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
   const [matchQuery, setMatchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [organFilter, setOrganFilter] = useState('all');
+
+  // New request modal
+  const [newRequestModal, setNewRequestModal] = useState({ open: false });
+  const [newRequestForm, setNewRequestForm] = useState({
+    donor: '',
+    organ: 'Kidney',
+    status: 'Pending',
+    consent: true,
+    tests: []
+  });
+  const [creatingRequest, setCreatingRequest] = useState(false);
 
   // Persist settings
   useEffect(() => { sessionStorage.setItem('apiBase', apiBase); }, [apiBase]);
@@ -395,69 +396,156 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl animate-pulse [animation-duration:6s]" />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40 bg-slate-900/70 border-b border-slate-800">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-          <img src="/logo.png" alt="Ram Setu" className="h-9 w-9 rounded-xl ring-1 ring-white/20" />
-          <div className="text-xl font-semibold tracking-wide">
-            <span className="bg-gradient-to-r from-fuchsia-400 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">Ram Setu Admin</span>
-          </div>
-          <div className="ml-auto flex items-center gap-3">
-            <button className="rounded border border-slate-700 px-3 py-1 text-slate-300 hover:bg-slate-800" onClick={() => setShowSettings(s=>!s)}>
-              Settings
-            </button>
+      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40 bg-slate-900/70 border-b border-slate-800 shadow-lg">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
+          {/* Logo and branding */}
+          <div className="flex items-center gap-3 min-w-0">
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                placeholder="Search donors by name, email, or group..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-72 rounded-xl bg-slate-800/70 pl-9 pr-3 py-2 text-sm outline-none ring-1 ring-slate-700 focus:ring-cyan-400/50 transition"
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-30"></div>
+              <img src="/logo.png" alt="Ram Setu" className="relative h-10 w-10 rounded-xl ring-2 ring-cyan-400/50" />
             </div>
-            <span className="hidden sm:inline rounded-xl border border-slate-700/60 bg-slate-800/50 px-3 py-1 text-xs text-slate-300">Logged in as <b>admin</b></span>
+            <div className="hidden sm:block">
+              <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Ram Setu Admin</h1>
+              <p className="text-xs text-slate-400">Organ Donation Network</p>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div className="flex-1 max-w-md hidden md:flex">
+            <SearchBar
+              value={query}
+              onChange={setQuery}
+              placeholder="Search donors..."
+              loading={loadingDonors}
+            />
+          </div>
+
+          {/* User controls */}
+          <div className="flex items-center gap-3">
+            <button 
+              className="hidden sm:inline rounded-lg px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-medium transition shadow-lg"
+              onClick={() => setNewRequestModal({ open: true })}
+              title="Create a new organ donation request"
+            >
+              ➕ New Request
+            </button>
+            <button 
+              className="hidden sm:inline rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium text-slate-300 transition"
+              onClick={() => setShowSettings(s => !s)}
+            >
+              ⚙️ Settings
+            </button>
+            <button 
+              className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium text-slate-300 transition"
+              onClick={onLogout}
+            >
+              🚪 Logout
+            </button>
           </div>
         </div>
+
+        {/* Mobile search */}
+        <div className="md:hidden border-t border-slate-800 px-6 py-3 bg-slate-900/50">
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder="Search donors..."
+            loading={loadingDonors}
+          />
+        </div>
         {showSettings && (
-          <div className="border-t border-slate-800 bg-slate-900/80">
-            <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <label className="block text-xs text-slate-400">API Base URL</label>
-                <input value={apiBase} onChange={(e) => setApiBase(e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800/70 px-3 py-2 text-sm ring-1 ring-slate-700 focus:ring-cyan-400/50 outline-none" placeholder="http://localhost:5000" />
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-slate-400">Admin Token (JWT)</label>
-                <input value={adminToken} onChange={(e) => setAdminToken(e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800/70 px-3 py-2 text-sm ring-1 ring-slate-700 focus:ring-cyan-400/50 outline-none" placeholder="Paste token here" />
+          <div className="border-t border-slate-800 bg-slate-900/90 backdrop-blur">
+            <div className="mx-auto max-w-7xl px-6 py-6">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4">Settings</h3>
+              
+              {/* API Configuration */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">API Base URL</label>
+                    <input 
+                      value={apiBase} 
+                      onChange={(e) => setApiBase(e.target.value)} 
+                      className="w-full rounded-lg bg-slate-800/70 border border-slate-700 px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition" 
+                      placeholder="http://localhost:5000" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Admin Token (JWT)</label>
+                    <input 
+                      value={adminToken} 
+                      onChange={(e) => setAdminToken(e.target.value)} 
+                      className="w-full rounded-lg bg-slate-800/70 border border-slate-700 px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition" 
+                      placeholder="Paste JWT token here" 
+                    />
+                  </div>
+                </div>
+
                 {adminToken && (
-                  <div className="mt-1 text-xs text-slate-400">
-                    Detected role: <span className={tokenRole==='admin' ? 'text-emerald-400' : 'text-rose-400'}>{tokenRole || 'unknown'}</span>
+                  <div className={`rounded-lg border px-4 py-3 text-sm ${tokenRole === 'admin' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-orange-500/10 border-orange-500/30 text-orange-300'}`}>
+                    Token role detected: <span className="font-semibold">{tokenRole || 'unknown'}</span>
                   </div>
                 )}
-              </div>
-              <div className="flex gap-2">
-                <button className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-500" onClick={() => { fetchMatchRequests(); if (selectedDonor) fetchDonorRequests(selectedDonor); }}>Apply</button>
-                <button className="rounded border border-slate-700 px-4 py-2 text-slate-300 hover:bg-slate-800" onClick={() => setShowSettings(false)}>Close</button>
-              </div>
-            </div>
-            <div className="mx-auto mt-2 max-w-6xl rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <div className="mb-2 text-xs font-semibold text-slate-400">Quick Admin Login (dev helper)</div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-                <div>
-                  <label className="block text-xs text-slate-400">Auth Base</label>
-                  <input value={adminAuthUrl} onChange={(e)=>setAdminAuthUrl(e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800/70 px-3 py-2 text-sm ring-1 ring-slate-700 focus:ring-cyan-400/50 outline-none" placeholder="http://localhost:5001" />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400">Email</label>
-                  <input value={adminEmail} onChange={(e)=>setAdminEmail(e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800/70 px-3 py-2 text-sm ring-1 ring-slate-700 focus:ring-cyan-400/50 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400">Password</label>
-                  <input type="password" value={adminPassword} onChange={(e)=>setAdminPassword(e.target.value)} className="mt-1 w-full rounded-lg bg-slate-800/70 px-3 py-2 text-sm ring-1 ring-slate-700 focus:ring-cyan-400/50 outline-none" />
-                </div>
-                <div className="flex items-end">
-                  <button className="w-full rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-500" onClick={loginAdmin}>Login & Set Token</button>
+
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    className="rounded-lg px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-medium hover:from-cyan-500 hover:to-blue-500 transition shadow-lg"
+                    onClick={() => { fetchMatchRequests(); if (selectedDonor) fetchDonorRequests(selectedDonor); }}
+                  >
+                    ✓ Apply Changes
+                  </button>
+                  <button 
+                    className="rounded-lg px-6 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition"
+                    onClick={() => setShowSettings(false)}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">Uses Admin backend /api/admin/login to mint a short-lived admin token for local development.</div>
+
+              {/* Quick Admin Login */}
+              <div className="mt-6 pt-6 border-t border-slate-800">
+                <h4 className="text-sm font-semibold text-slate-300 mb-4">Quick Admin Login (Dev Helper)</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">Auth Base URL</label>
+                    <input 
+                      value={adminAuthUrl} 
+                      onChange={(e) => setAdminAuthUrl(e.target.value)} 
+                      className="w-full rounded-lg bg-slate-800/70 border border-slate-700 px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition" 
+                      placeholder="http://localhost:5001" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">Email</label>
+                    <input 
+                      value={adminEmail} 
+                      onChange={(e) => setAdminEmail(e.target.value)} 
+                      className="w-full rounded-lg bg-slate-800/70 border border-slate-700 px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">Password</label>
+                    <input 
+                      type="password" 
+                      value={adminPassword} 
+                      onChange={(e) => setAdminPassword(e.target.value)} 
+                      className="w-full rounded-lg bg-slate-800/70 border border-slate-700 px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition" 
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button 
+                      className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 font-medium hover:from-purple-500 hover:to-pink-500 transition shadow-lg"
+                      onClick={loginAdmin}
+                    >
+                      🔐 Login
+                    </button>
+                  </div>
+                  <div className="flex items-end text-xs text-slate-400">
+                    Mints a short-lived token for development
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -465,74 +553,163 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
 
       {/* Flash messages */}
       {flash.message && (
-        <div className={`fixed right-4 top-20 z-50 rounded-xl px-4 py-2 shadow-lg ${flash.type === 'success' ? 'bg-emerald-500/90 text-white' : 'bg-rose-500/90 text-white'}`}>
-          {flash.message}
-        </div>
+        <Alert
+          type={flash.type === 'success' ? 'success' : 'error'}
+          message={flash.message}
+          onClose={() => setFlash({ type: '', message: '' })}
+          autoHide={true}
+          duration={3000}
+        />
       )}
 
       {/* Main content grid */}
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 md:grid-cols-2 xl:grid-cols-3">
-        {/* Donors List */}
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl ring-1 ring-white/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" /> Donors
-            </h2>
-            <div className="flex gap-2">
-              <button className="rounded border border-slate-700 px-3 py-1 text-slate-300 hover:bg-slate-800" onClick={onRefreshDonors}>Refresh</button>
-              <button className="rounded bg-slate-800 px-3 py-1 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700" onClick={exportAllDonorsCSV}>Export CSV</button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {loadingDonors ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-800/60" />
-                ))}
-              </div>
-            ) : donorError ? (
-              <div className="rounded-xl bg-rose-500/10 p-3 text-rose-300 ring-1 ring-rose-500/30">{donorError}</div>
-            ) : filteredDonors.length > 0 ? (
-              <ul className="max-h-[70vh] space-y-3 overflow-auto pr-1">
-                {filteredDonors.map((donor) => (
-                  <li
-                    key={donor._id}
-                    onClick={() => handleDonorClick(donor)}
-                    className="group cursor-pointer rounded-xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-900/60 p-4 transition hover:border-cyan-500/40 hover:shadow-cyan-400/10 hover:shadow-lg"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-100 group-hover:text-cyan-200">
-                          {donor.name || donor.fullName || 'N/A'}
-                        </div>
-                        <div className="text-xs text-slate-400">{donor.email || '—'}</div>
-                      </div>
-                      <div className="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-300 ring-1 ring-slate-700">{donor.bloodGroup || 'BG'}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-400">No donors match your search.</p>
-            )}
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        {/* Dashboard Overview */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-slate-100 mb-6 flex items-center gap-2">
+            <span className="w-1 h-6 rounded bg-gradient-to-b from-cyan-400 to-blue-600"></span>
+            Dashboard Overview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              icon={UserGroupIcon}
+              label="Total Donors"
+              value={Array.isArray(donors) ? donors.length : 0}
+              loading={loadingDonors}
+              color="blue"
+            />
+            <StatCard 
+              icon={HeartIcon}
+              label="Total Patients"
+              value={Array.isArray(patients) ? patients.length : 0}
+              loading={loadingPatients}
+              color="pink"
+            />
+            <StatCard 
+              icon={TrendingIcon}
+              label="Match Requests"
+              value={matchRequests.length}
+              loading={loadingMatches}
+              color="purple"
+            />
+            <StatCard 
+              icon={CheckIcon}
+              label="Approved Matches"
+              value={matchStats.approved}
+              loading={loadingMatches}
+              color="green"
+            />
           </div>
         </section>
+
+        {/* Tabs Navigation */}
+        <div className="flex gap-2 mb-8 border-b border-slate-800 overflow-x-auto">
+          {[
+            { id: 'overview', label: '📊 Donors & Patients', icon: UserGroupIcon },
+            { id: 'matches', label: '💞 Matches', icon: HeartIcon }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-3 font-medium text-sm whitespace-nowrap transition border-b-2 ${
+                activeTab === tab.id
+                  ? 'border-cyan-400 text-cyan-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Donors List */}
+        <section className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6 shadow-xl backdrop-blur">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="flex items-center gap-3 text-xl font-bold text-slate-100">
+              <span className="w-2 h-8 rounded bg-gradient-to-b from-emerald-400 to-cyan-500"></span>
+              Donors
+            </h3>
+            <div className="flex gap-2">
+              <button 
+                className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+                onClick={onRefreshDonors}
+              >
+                🔄 Refresh
+              </button>
+              <button 
+                className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+                onClick={exportAllDonorsCSV}
+              >
+                📥 Export CSV
+              </button>
+            </div>
+          </div>
+
+          {loadingDonors ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-800/50" />
+              ))}
+            </div>
+          ) : donorError ? (
+            <Alert type="error" message={donorError} />
+          ) : filteredDonors.length > 0 ? (
+            <ul className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
+              {filteredDonors.map((donor) => (
+                <li
+                  key={donor._id}
+                  onClick={() => handleDonorClick(donor)}
+                  className="group cursor-pointer rounded-xl border border-slate-700 bg-slate-900/50 hover:bg-slate-800 p-4 transition hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-400/10"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-slate-100 group-hover:text-emerald-300 transition">
+                        {donor.name || donor.fullName || 'N/A'}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">{donor.email || '—'}</div>
+                    </div>
+                    <div className="rounded-lg bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-cyan-500/30 px-3 py-1 text-sm font-semibold text-cyan-300">
+                      {donor.bloodGroup || 'BG'}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-8 text-slate-400">
+              <p>No donors found</p>
+            </div>
+          )}
+        </section>
         {/* Donor Profile Panel */}
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl ring-1 ring-white/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-              <span className="h-2 w-2 rounded-full bg-fuchsia-400" /> Donor Profile
-            </h2>
+        <section className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6 shadow-xl backdrop-blur lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="flex items-center gap-3 text-xl font-bold text-slate-100">
+              <span className="w-2 h-8 rounded bg-gradient-to-b from-purple-400 to-pink-500"></span>
+              Donor Profile
+            </h3>
             {selectedDonor && (
-              <button className="rounded bg-slate-800 px-3 py-1 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700" onClick={exportSelectedDonorCSV}>Export CSV</button>
+              <button 
+                className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+                onClick={exportSelectedDonorCSV}
+              >
+                📥 Export CSV
+              </button>
             )}
           </div>
+
           {!selectedDonor ? (
-            <div className="grid h-full place-items-center py-12 text-center text-slate-400">
-              <p>Select a donor to view profile and requests.</p>
+            <div className="h-64 flex flex-col items-center justify-center text-center text-slate-400">
+              <span className="text-4xl mb-3">👤</span>
+              <p>Select a donor to view profile</p>
+              <p className="text-sm mt-1">and donation requests</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               {/* Info card */}
               <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
                 {loadingDetails ? (
@@ -628,7 +805,7 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
                             >
                               {expandedReq[req._id] ? 'Hide details' : 'Details'}
                             </button>
-                            {req.status !== 'Verified' && (
+                            {req.status !== 'Verified' && req.status !== 'Donated' && (
                               <button
                                 className="rounded bg-emerald-600 px-4 py-1 text-white transition hover:bg-emerald-500 disabled:opacity-60"
                                 onClick={() => handleVerifyRequest(req._id)}
@@ -701,45 +878,78 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
         </section>
 
         {/* Patients List */}
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl ring-1 ring-white/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-              <span className="h-2 w-2 rounded-full bg-cyan-400" /> Patients
-            </h2>
+        <section className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6 shadow-xl backdrop-blur">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="flex items-center gap-3 text-xl font-bold text-slate-100">
+              <span className="w-2 h-8 rounded bg-gradient-to-b from-cyan-400 to-blue-500"></span>
+              Patients
+            </h3>
             <div className="flex gap-2">
-              <button className="rounded border border-slate-700 px-3 py-1 text-slate-300 hover:bg-slate-800" onClick={onRefreshPatients}>Refresh</button>
-              <button className="rounded bg-slate-800 px-3 py-1 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-700" onClick={exportAllPatientsCSV}>Export CSV</button>
+              <button 
+                className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+                onClick={onRefreshPatients}
+              >
+                🔄 Refresh
+              </button>
+              <button 
+                className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+                onClick={exportAllPatientsCSV}
+              >
+                📥 Export CSV
+              </button>
             </div>
           </div>
+
           {loadingPatients ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-800/60" />
+                <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-800/50" />
               ))}
             </div>
           ) : patientError ? (
-            <div className="rounded-xl bg-rose-500/10 p-3 text-rose-300 ring-1 ring-rose-500/30">{patientError}</div>
+            <Alert type="error" message={patientError} />
           ) : patients && patients.length > 0 ? (
-            <ul className="max-h-[70vh] space-y-3 overflow-auto pr-1">
+            <ul className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
               {patients.map((p) => (
-                <li key={p._id} className="cursor-pointer rounded-xl border border-slate-800 bg-slate-900/60 p-4 hover:border-cyan-500/40" onClick={() => handlePatientClick(p)}>
-                  <div className="text-sm font-semibold text-slate-100">{p.name}</div>
-                  <div className="text-xs text-slate-400">{p.email}</div>
-                  <div className="mt-1 inline-flex rounded-md bg-slate-800 px-2 py-0.5 text-xs text-slate-300 ring-1 ring-slate-700">BG: {p.bloodGroup}</div>
+                <li 
+                  key={p._id} 
+                  onClick={() => handlePatientClick(p)}
+                  className="group cursor-pointer rounded-xl border border-slate-700 bg-slate-900/50 hover:bg-slate-800 p-4 transition hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-400/10"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-slate-100 group-hover:text-cyan-300 transition">
+                        {p.name || p.fullName || 'N/A'}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">{p.email || '—'}</div>
+                    </div>
+                    <div className="rounded-lg bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 px-3 py-1 text-sm font-semibold text-pink-300">
+                      {p.bloodGroup || 'BG'}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-400">No patient data found.</p>
+            <div className="text-center py-8 text-slate-400">
+              <p>No patients found</p>
+            </div>
           )}
         </section>
-        {/* Match Requests */}
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-2xl ring-1 ring-white/5 xl:col-span-3">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-              <span className="h-2 w-2 rounded-full bg-amber-400" /> Match Requests
-            </h2>
-            <button className="rounded border border-slate-700 px-3 py-1 text-slate-300 hover:bg-slate-800" onClick={fetchMatchRequests}>Refresh</button>
+        </div>
+        ) : (
+        <section className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-900/50 p-6 shadow-xl backdrop-blur">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="flex items-center gap-3 text-xl font-bold text-slate-100">
+              <span className="w-2 h-8 rounded bg-gradient-to-b from-amber-400 to-orange-500"></span>
+              Match Requests
+            </h3>
+            <button 
+              className="rounded-lg px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium transition text-sm"
+              onClick={fetchMatchRequests}
+            >
+              🔄 Refresh
+            </button>
           </div>
           {loadingMatches ? (
             <div className="space-y-3">
@@ -826,6 +1036,7 @@ function Dashboard({ donors, patients, loadingDonors, loadingPatients, donorErro
             </>
           )}
         </section>
+        )}
       </main>
 
       {/* Status Change Modal */}
