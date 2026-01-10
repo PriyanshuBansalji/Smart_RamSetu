@@ -28,5 +28,6 @@ Contact & governance
 Maintainers and contributor guidelines are in the repository docs. If you need an invite or access, open an issue or contact the maintainers via the project channels.
 
 ---
+Video link: https://www.youtube.com/watch?v=TPL7SSvsoik
 
 Note: This README is a concise project overview. See `Round2/` for the full round-specific documentation.
