@@ -30,4 +30,4 @@ Maintainers and contributor guidelines are in the repository docs. If you need a
 ---
 Video link: https://www.youtube.com/watch?v=TPL7SSvsoik
 
-Note: This README is a concise project overview. See `Round2/` for the full round-specific documentation.
+Note: This README is a concise project overview. See `DBMS/Round2/` for the full round-specific documentation.
