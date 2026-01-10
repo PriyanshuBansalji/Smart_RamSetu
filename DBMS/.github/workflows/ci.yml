@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Server - install & test
+        working-directory: ramsetu-health-bridge-main/server
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm test
+          else
+            echo "No server package.json found; skipping tests"
+          fi
+  ml-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: ML - lint / requirements
+        working-directory: ml_hybrid_module
+        run: |
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+            echo "Installed ML requirements"
+          else
+            echo "No ML requirements.txt found; skipping"
+          fi
